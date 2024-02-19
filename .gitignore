@@ -1,11 +1,12 @@
+parser/supTest
+parser/tests
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
 
 # C extensions
-*.so
-*.test
 # Distribution / packaging
 .Python
 build/

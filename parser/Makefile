@@ -1,2 +1,2 @@
 run:
-	python3.10 parse.py < test.test
+	python3.10 parse.py < tests/sp.t

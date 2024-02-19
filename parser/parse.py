@@ -19,7 +19,6 @@ wordCounter = 0
 
 
 # flags
-headerFlag = False
 
 
 def ErrPrint(err):
@@ -52,8 +51,11 @@ def PrintArg(number):
     if type == "GF" or type == "LF" or type == "TF":
         type = "var"
         value = words[wordCounter]
-    else:
+    elif words[wordCounter].count("@") != 0:
         value = words[wordCounter].split("@", 1)[1]
+    else:
+        type = "type"
+        value = words[wordCounter]
 
     print(f"    <arg{number} type=\"{type}\">{value}</arg{number}>")
     wordCounter += 1
@@ -61,6 +63,9 @@ def PrintArg(number):
 
 def PrintLabelArg(number):
     global wordCounter
+    # if words[wordCounter].count("@") != 1:
+    #     ErrPrint("Lexical or syntax error there")
+    #     sys.exit(LEX_SYN_ERR)
     type = "label"
     value = words[wordCounter]
     print(f"    <arg{number} type=\"{type}\">{value}</arg{number}>")
@@ -148,12 +153,14 @@ def varSymbSymb():
 def varType():
     global words
     global wordCounter
-    if len(words) != 2:
+    if len(words) != 3:
         ErrPrint("Lexical or syntax error")
+        print(words)
         sys.exit(LEX_SYN_ERR)
     
     PrintInstructions(words[wordCounter])
     PrintArg(1)
+    PrintArg(2)
     PrintEndInstruction()
     return
 
@@ -228,19 +235,14 @@ def LineCheck(line):
             sys.exit(HEADER_ERR)
     
     wordCounter = 0
-    
+    words[0] = words[0].upper()
     for i in range(len(words)):
         if words[wordCounter] != " " or words[wordCounter] != "\n" or words[wordCounter] != "\t":
-            switch.get(words[wordCounter], lambda: ErrPrint("Lexical or syntax error"))()
+            switch.get(words[wordCounter], lambda: ErrPrint(f"Lexical or syntax error {words}"))()
         
         if len(words) == wordCounter:
             return
-    
     return
-
-
-
-
 
 
 ArgumentCheck()
