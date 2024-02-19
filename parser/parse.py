@@ -17,7 +17,7 @@ orderCounter = 0
 words = []
 wordCounter = 0
 
-
+types = ["int", "bool", "string", "nil", "label", "type", "var"]
 # flags
 
 
@@ -56,6 +56,10 @@ def PrintArg(number):
     else:
         type = "type"
         value = words[wordCounter]
+
+    if type not in types:
+        ErrPrint("Lexical or syntax error there")
+        sys.exit(LEX_SYN_ERR)        
 
     print(f"    <arg{number} type=\"{type}\">{value}</arg{number}>")
     wordCounter += 1
