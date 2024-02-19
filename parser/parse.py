@@ -77,7 +77,7 @@ def PrintEndInstruction():
     return
 
 
-def varSym():
+def varSymb():
     global words
     global wordCounter
     if len(words) != 3:
@@ -180,7 +180,7 @@ def labelSymbSymb():
 
 
 switch = {
-    "MOVE": varSym,
+    "MOVE": varSymb,
     "CREATEFRAME": noArgs,
     "PUSHFRAME": noArgs,
     "POPFRAME": noArgs,
@@ -198,16 +198,16 @@ switch = {
     "EQ": varSymbSymb,
     "AND": varSymbSymb,
     "OR": varSymbSymb,
-    "NOT": varSymbSymb,
-    "INT2CHAR": varSym,
+    "NOT": varSymb,
+    "INT2CHAR": varSymb,
     "STRI2INT": varSymbSymb,
     "READ": varType,
     "WRITE": symb,
     "CONCAT": varSymbSymb,
-    "STRLEN": varSym,
+    "STRLEN": varSymb,
     "GETCHAR": varSymbSymb,
     "SETCHAR": varSymbSymb,
-    "TYPE": varSym,
+    "TYPE": varSymb,
     "LABEL": label,
     "JUMP": label,
     "JUMPIFEQ": labelSymbSymb,
