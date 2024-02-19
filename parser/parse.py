@@ -44,8 +44,33 @@ def ConvertToXML(value):
     value = value.replace(">", "&gt;")
     value = value.replace("\"", "&quot;")
     value = value.replace("'", "&apos;")
-
     return value
+
+def PrintHeader():
+    print("<?xml version=\"1.0\" encoding=\"utf-8\"?>")
+    print("<program language=\"IPPcode24\">")
+    return
+
+def IntCheck(value):
+    if value.isdigit() == False:
+        pattern = r'^-?(0x[\dA-Fa-f]+|0o[0-7]+|\d+)$'
+        if re.match(pattern, value) == None:
+            ErrPrint("Lexical or syntax error there")
+            sys.exit(LEX_SYN_ERR)
+    return
+
+def EscSeqCheck(value):
+    list = []
+    for i in range(len(value)):
+        if value[i] == "\\":
+            list.append(i)
+
+    pattern = r'\\(\d{3})'
+    for i in range(len(list)):
+        if re.match(pattern, value[list[i]:list[i]+4]) == None:
+            ErrPrint("Lexical or syntax error there")
+            sys.exit(LEX_SYN_ERR)
+    return
 
 def PrintInstructions(opcode):
     global orderCounter
@@ -72,23 +97,10 @@ def PrintArg(number):
         sys.exit(LEX_SYN_ERR)        
 
     if type == "int":
-        if value.isdigit() == False:
-            pattern = r'^-?(0x[\dA-Fa-f]+|0o[0-7]+|\d+)$'
-            if re.match(pattern, value) == None:
-                ErrPrint("Lexical or syntax error there")
-                sys.exit(LEX_SYN_ERR)
+        IntCheck(value)
 
     if value.count("\\") != 0:
-        list = []
-        for i in range(len(value)):
-            if value[i] == "\\":
-                list.append(i)
-
-        pattern = r'\\(\d{3})'
-        for i in range(len(list)):
-            if re.match(pattern, value[list[i]:list[i]+4]) == None:
-                ErrPrint("Lexical or syntax error there")
-                sys.exit(LEX_SYN_ERR)
+        EscSeqCheck(value)
     
     value = ConvertToXML(value)
 
@@ -198,6 +210,11 @@ def varSymbSymb():
         sys.exit(LEX_SYN_ERR)
 
     PrintInstructions(words[wordCounter])
+
+    if words[wordCounter].count("@") == 0:
+        ErrPrint("Lexical or syntax error")
+        sys.exit(LEX_SYN_ERR)
+
     PrintArg(1)
     PrintArg(2)
     PrintArg(3)
@@ -304,8 +321,7 @@ def LineCheck(line):
 
 
 ArgumentCheck()
-print("<?xml version=\"1.0\" encoding=\"utf-8\"?>")
-print("<program language=\"IPPcode24\">")
+PrintHeader()
 for line in stdin:
     LineCheck(line)
 
