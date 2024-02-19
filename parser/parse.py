@@ -1,5 +1,6 @@
 import sys
 from sys import stdin
+import re
 
 # Return codes
 OK = 0
@@ -61,6 +62,37 @@ def PrintArg(number):
         ErrPrint("Lexical or syntax error there")
         sys.exit(LEX_SYN_ERR)        
 
+    if type == "int":
+        if value.isdigit() == False:
+            pattern = r'^-?(0x[\dA-Fa-f]+|0o[0-7]+|\d+)$'
+            if re.match(pattern, value) == None:
+                ErrPrint("Lexical or syntax error there")
+                sys.exit(LEX_SYN_ERR)
+
+    if value.count("\\") != 0:
+        list = []
+        for i in range(len(value)):
+            if value[i] == "\\":
+                list.append(i)
+
+        pattern = r'\\(\d{3})'
+        for i in range(len(list)):
+            if re.match(pattern, value[list[i]:list[i]+4]) == None:
+                ErrPrint("NLexical or syntax error there")
+                sys.exit(LEX_SYN_ERR)
+
+    print(f"    <arg{number} type=\"{type}\">{value}</arg{number}>")
+    wordCounter += 1
+    return
+
+def PrintReadArg(number):
+    global wordCounter
+    type = "type"
+    value = words[wordCounter]
+    if value not in types:
+        ErrPrint("Lexical or syntax error there")
+        sys.exit(LEX_SYN_ERR)
+    
     print(f"    <arg{number} type=\"{type}\">{value}</arg{number}>")
     wordCounter += 1
     return
@@ -136,6 +168,13 @@ def symb():
         sys.exit(LEX_SYN_ERR)
     
     PrintInstructions(words[wordCounter])
+
+    if words[wordCounter-1] == "WRITE":
+        type = words[wordCounter].split("@")[0]
+        if type not in types and type != "GF" and type != "LF" and type != "TF":
+            ErrPrint("Lexical or syntax error")
+            sys.exit(LEX_SYN_ERR)
+
     PrintArg(1)
     PrintEndInstruction()
     return
@@ -164,7 +203,7 @@ def varType():
     
     PrintInstructions(words[wordCounter])
     PrintArg(1)
-    PrintArg(2)
+    PrintReadArg(2)
     PrintEndInstruction()
     return
 
@@ -237,7 +276,11 @@ def LineCheck(line):
         else:
             ErrPrint("Header error")
             sys.exit(HEADER_ERR)
-    
+
+    if words[0] == ".IPPcode24":
+        ErrPrint("Header error")
+        sys.exit(LEX_SYN_ERR)
+
     wordCounter = 0
     words[0] = words[0].upper()
     for i in range(len(words)):
@@ -254,5 +297,9 @@ print("<?xml version=\"1.0\" encoding=\"utf-8\"?>")
 print("<program language=\"IPPcode24\">")
 for line in stdin:
     LineCheck(line)
+
+if wordCounter == 0 and orderCounter == 0:
+    ErrPrint("Lexical or syntax error")
+    sys.exit(HEADER_ERR)
 
 print("</program>")
