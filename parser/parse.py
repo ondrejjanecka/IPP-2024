@@ -72,6 +72,15 @@ def EscSeqCheck(value):
             sys.exit(LEX_SYN_ERR)
     return
 
+def VariableCheck(value):
+    if value.count("@") != 1:
+        ErrPrint("Lexical or syntax error there")
+        sys.exit(LEX_SYN_ERR)
+    if value.split("@")[0] in types:
+        ErrPrint("Lexical or syntax error there")
+        sys.exit(LEX_SYN_ERR)
+    return
+
 def PrintInstructions(opcode):
     global orderCounter
     global wordCounter
@@ -144,6 +153,7 @@ def varSymb():
         sys.exit(LEX_SYN_ERR)
     
     PrintInstructions(words[wordCounter])
+    VariableCheck(words[wordCounter])
     PrintArg(1)
     PrintArg(2)
     PrintEndInstruction()
@@ -167,6 +177,7 @@ def var():
         sys.exit(LEX_SYN_ERR)
     
     PrintInstructions(words[wordCounter])
+    VariableCheck(words[wordCounter])
     PrintArg(1)
     PrintEndInstruction()
     return
@@ -198,6 +209,9 @@ def symb():
             ErrPrint("Lexical or syntax error")
             sys.exit(LEX_SYN_ERR)
 
+    if words[wordCounter].count("@") < 1:
+        ErrPrint("Lexical or syntax error")
+        sys.exit(LEX_SYN_ERR)
     PrintArg(1)
     PrintEndInstruction()
     return
@@ -210,11 +224,7 @@ def varSymbSymb():
         sys.exit(LEX_SYN_ERR)
 
     PrintInstructions(words[wordCounter])
-
-    if words[wordCounter].count("@") == 0:
-        ErrPrint("Lexical or syntax error")
-        sys.exit(LEX_SYN_ERR)
-
+    VariableCheck(words[wordCounter])
     PrintArg(1)
     PrintArg(2)
     PrintArg(3)
@@ -230,6 +240,7 @@ def varType():
         sys.exit(LEX_SYN_ERR)
     
     PrintInstructions(words[wordCounter])
+    VariableCheck(words[wordCounter])
     PrintArg(1)
     PrintReadArg(2)
     PrintEndInstruction()
@@ -248,7 +259,6 @@ def labelSymbSymb():
     PrintArg(3)
     PrintEndInstruction()
     return
-
 
 switch = {
     "MOVE": varSymb,
