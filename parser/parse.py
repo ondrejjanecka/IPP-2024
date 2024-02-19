@@ -38,6 +38,15 @@ def ArgumentCheck():
     ErrPrint("Wrong number of arguments or combination of arguments")
     sys.exit(PARAMS_ERR)
 
+def ConvertToXML(value):
+    value = value.replace("&", "&amp;")
+    value = value.replace("<", "&lt;")
+    value = value.replace(">", "&gt;")
+    value = value.replace("\"", "&quot;")
+    value = value.replace("'", "&apos;")
+
+    return value
+
 def PrintInstructions(opcode):
     global orderCounter
     global wordCounter
@@ -78,8 +87,10 @@ def PrintArg(number):
         pattern = r'\\(\d{3})'
         for i in range(len(list)):
             if re.match(pattern, value[list[i]:list[i]+4]) == None:
-                ErrPrint("NLexical or syntax error there")
+                ErrPrint("Lexical or syntax error there")
                 sys.exit(LEX_SYN_ERR)
+    
+    value = ConvertToXML(value)
 
     print(f"    <arg{number} type=\"{type}\">{value}</arg{number}>")
     wordCounter += 1
