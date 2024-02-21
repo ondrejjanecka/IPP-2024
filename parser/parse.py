@@ -81,6 +81,12 @@ def VariableCheck(value):
         sys.exit(LEX_SYN_ERR)
     return
 
+def SymbolCheck(value):
+    if value.count("@") != 1:
+        ErrPrint("Lexical or syntax error there")
+        sys.exit(LEX_SYN_ERR)
+    return
+
 def PrintInstructions(opcode):
     global orderCounter
     global wordCounter
@@ -101,7 +107,7 @@ def PrintArg(number):
         type = "type"
         value = words[wordCounter]
 
-    if type not in types:
+    if type not in types or value == "label" or value == "var" or value == "type":
         ErrPrint("Lexical or syntax error there")
         sys.exit(LEX_SYN_ERR)        
 
@@ -112,6 +118,16 @@ def PrintArg(number):
         EscSeqCheck(value)
     
     value = ConvertToXML(value)
+
+    if type == "bool":
+        if value != "true" and value != "false":
+            ErrPrint("Lexical or syntax error there")
+            sys.exit(LEX_SYN_ERR)
+
+    if type == "nil":
+        if value != "nil":
+            ErrPrint("Lexical or syntax error there")
+            sys.exit(LEX_SYN_ERR)
 
     print(f"    <arg{number} type=\"{type}\">{value}</arg{number}>")
     wordCounter += 1
@@ -131,9 +147,9 @@ def PrintReadArg(number):
 
 def PrintLabelArg(number):
     global wordCounter
-    # if words[wordCounter].count("@") != 1:
-    #     ErrPrint("Lexical or syntax error there")
-    #     sys.exit(LEX_SYN_ERR)
+    if words[wordCounter].count("@") != 0:
+        ErrPrint("Lexical or syntax error there")
+        sys.exit(LEX_SYN_ERR)
     type = "label"
     value = words[wordCounter]
     print(f"    <arg{number} type=\"{type}\">{value}</arg{number}>")
@@ -155,6 +171,7 @@ def varSymb():
     PrintInstructions(words[wordCounter])
     VariableCheck(words[wordCounter])
     PrintArg(1)
+    SymbolCheck(words[wordCounter])
     PrintArg(2)
     PrintEndInstruction()
     return
@@ -226,7 +243,9 @@ def varSymbSymb():
     PrintInstructions(words[wordCounter])
     VariableCheck(words[wordCounter])
     PrintArg(1)
+    SymbolCheck(words[wordCounter])
     PrintArg(2)
+    SymbolCheck(words[wordCounter])
     PrintArg(3)
     PrintEndInstruction()
     return
@@ -255,7 +274,9 @@ def labelSymbSymb():
 
     PrintInstructions(words[wordCounter])
     PrintLabelArg(1)
+    SymbolCheck(words[wordCounter])
     PrintArg(2)
+    SymbolCheck(words[wordCounter])
     PrintArg(3)
     PrintEndInstruction()
     return
@@ -323,7 +344,7 @@ def LineCheck(line):
     words[0] = words[0].upper()
     for i in range(len(words)):
         if words[wordCounter] != " " or words[wordCounter] != "\n" or words[wordCounter] != "\t":
-            switch.get(words[wordCounter], lambda: ErrPrint(f"Lexical or syntax error {words}"))()
+            switch.get(words[wordCounter], lambda: sys.exit(OPCODE_ERR))()
         
         if len(words) == wordCounter:
             return
