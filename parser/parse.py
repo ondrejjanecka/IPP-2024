@@ -13,7 +13,6 @@ LEX_SYN_ERR = 23
 INTERNAL_ERR = 99
 # Return codes end
 
-
 orderCounter = 0
 words = []
 wordCounter = 0
@@ -75,11 +74,6 @@ def ErrPrint(err):
 
 def PrintStats():
     global opcodeStats
-
-    print(existingLabels)
-    print(fwjumps)
-    print(backjumps)
-
     statsFile = statsString[0].split("=")[1]
     with open(statsFile, "w") as file:
         for record in statsString:
@@ -104,7 +98,6 @@ def PrintStats():
                 for i in range(len(fwjumps)):
                     if fwjumps[i] in existingLabels:
                         fwCount += 1
-                        print("fw " + fwjumps[i])
                 file.write(str(fwCount))
                 file.write("\n")
 
@@ -117,7 +110,6 @@ def PrintStats():
                 for i in range(len(fwjumps)):
                     if fwjumps[i] not in existingLabels:
                         badCount += 1
-                        print("bad " + fwjumps[i])
                 file.write(str(badCount))
                 file.write("\n")                
 
@@ -151,7 +143,6 @@ def ArgumentCheck():
 
     for i in range(1, argC):
         arg = sys.argv[i]
-        print(arg)
         if arg == "--help":
             print("Help")
             sys.exit(OK)
@@ -164,11 +155,13 @@ def ArgumentCheck():
             sys.exit(PARAMS_ERR)
 
     stats_count = sum(1 for arg in sys.argv if arg.startswith('--stats'))
+
+    if stats_count == 0:
+        return
+
     if stats_count > 1 or statsString[0].split("=")[0] != "--stats":
         ErrPrint("Wrong number of arguments or combination of arguments")
         sys.exit(PARAMS_ERR)
-
-    print(statsString)
 
     return
 
@@ -358,7 +351,6 @@ def label():
 
     if words[wordCounter-1] not in existingLabels and words[wordCounter-2] == "LABEL":
         existingLabels.append(words[wordCounter-1])
-        print(existingLabels)
     return
 
 def symb():
@@ -405,7 +397,6 @@ def varType():
     global wordCounter
     if len(words) != 3:
         ErrPrint("Lexical or syntax error")
-        print(words)
         sys.exit(LEX_SYN_ERR)
     
     PrintInstructions(words[wordCounter])
@@ -476,6 +467,7 @@ def LineCheck(line):
     global comments
     global loc
     global opcodeStats
+    global statsString
 
     if line.count("#") > 0:
         comments += 1
@@ -523,5 +515,6 @@ if wordCounter == 0 and orderCounter == 0:
 
 print("</program>")
 
-PrintStats()
+if len(statsString) != 0:
+    PrintStats()
         
