@@ -19,24 +19,84 @@ words = []
 wordCounter = 0
 
 types = ["int", "bool", "string", "nil", "label", "type", "var"]
-# flags
 
+# Stats
+statsArgs = ["--stats", "--loc", "--comments", "--labels", "--jumps", "--fwjumps", "--backjumps", "--badjumps", "--frequent", "--eol"]
+statsString = []
+existingLabels = []
+loc = 0
+comments = 0
+jumps = 0
+fwjumps = 0
+backjumps = 0
+badjumps = 0
+frequent = False
+# Stats end
 
 def ErrPrint(err):
     print("ERR: " + err, file=sys.stderr)
 
+def PrintStats():
+    statsFile = statsString[0].split("=")[1]
+    with open(statsFile, "w") as file:
+        for record in statsString:
+            if record == "--loc":                       #OK
+                file.write(str(loc))
+                file.write("\n")
+            elif record == "--comments":                #OK
+                file.write(str(comments))
+                file.write("\n")
+            elif record == "--labels":                  #OK
+                file.write(str(len(existingLabels)))
+                file.write("\n")
+            elif record == "--jumps":                   #OK
+                file.write(str(jumps))
+                file.write("\n")
+            elif record == "--fwjumps":
+                file.write(str(fwjumps))
+                file.write("\n")
+            elif record == "--backjumps":
+                file.write(str(backjumps))
+                file.write("\n")
+            elif record == "--badjumps":
+                file.write(str(badjumps))
+                file.write("\n")
+            elif record == "--frequent":
+                continue
+            elif record.count("--print=") == 1:         #OK
+                file.write(record.split("=")[1])
+                file.write("\n")
+            elif record == "--eol":                     #OK
+                file.write("")
+                file.write("\n")
+
+
 def ArgumentCheck():
+    global statsString
     argC = len(sys.argv)
 
-    if argC == 1:
-        return
-    elif argC == 2:
-        if sys.argv[1] == "--help":
+    for i in range(1, argC):
+        arg = sys.argv[i]
+        print(arg)
+        if arg == "--help":
             print("Help")
             sys.exit(OK)
-    
-    ErrPrint("Wrong number of arguments or combination of arguments")
-    sys.exit(PARAMS_ERR)
+        elif arg.count("--stats=") == 1:
+            statsString.append(sys.argv[i])
+        elif arg in statsArgs or arg.count("--print=") == 1:
+            statsString.append(sys.argv[i])
+        else:
+            ErrPrint("Wrong number of arguments or combination of arguments")
+            sys.exit(PARAMS_ERR)
+
+    stats_count = sum(1 for arg in sys.argv if arg.startswith('--stats'))
+    if stats_count > 1 or statsString[0].split("=")[0] != "--stats":
+        ErrPrint("Wrong number of arguments or combination of arguments")
+        sys.exit(PARAMS_ERR)
+
+    print(statsString)
+
+    return
 
 def ConvertToXML(value):
     value = value.replace("&", "&amp;")
@@ -147,6 +207,7 @@ def PrintReadArg(number):
 
 def PrintLabelArg(number):
     global wordCounter
+    global jumps
     if words[wordCounter].count("@") != 0:
         ErrPrint("Lexical or syntax error there")
         sys.exit(LEX_SYN_ERR)
@@ -154,12 +215,12 @@ def PrintLabelArg(number):
     value = words[wordCounter]
     print(f"    <arg{number} type=\"{type}\">{value}</arg{number}>")
     wordCounter += 1
+    jumps += 1
     return
 
 def PrintEndInstruction():
     print("  </instruction>")
     return
-
 
 def varSymb():
     global words
@@ -209,6 +270,10 @@ def label():
     PrintInstructions(words[wordCounter])
     PrintLabelArg(1)
     PrintEndInstruction()
+
+    if words[wordCounter-1] not in existingLabels:
+        existingLabels.append(words[wordCounter-1])
+        print(existingLabels)
     return
 
 def symb():
@@ -323,6 +388,12 @@ def LineCheck(line):
     global orderCounter
     global words
     global wordCounter
+    global comments
+    global loc
+
+    if line.count("#") > 0:
+        comments += 1
+
     line = line.split("#")[0]
     words = line.split()
 
@@ -339,6 +410,8 @@ def LineCheck(line):
     if words[0] == ".IPPcode24":
         ErrPrint("Header error")
         sys.exit(LEX_SYN_ERR)
+
+    loc += 1
 
     wordCounter = 0
     words[0] = words[0].upper()
@@ -361,3 +434,5 @@ if wordCounter == 0 and orderCounter == 0:
     sys.exit(HEADER_ERR)
 
 print("</program>")
+
+PrintStats()
