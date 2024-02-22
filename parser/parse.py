@@ -27,45 +27,119 @@ existingLabels = []
 loc = 0
 comments = 0
 jumps = 0
-fwjumps = 0
-backjumps = 0
-badjumps = 0
-frequent = False
+fwjumps = []
+backjumps = []
+
+opcodeStats = {
+    "MOVE": 0,
+    "CREATEFRAME": 0,
+    "PUSHFRAME": 0,
+    "POPFRAME": 0,
+    "DEFVAR": 0,
+    "CALL": 0,
+    "RETURN": 0,
+    "PUSHS": 0,
+    "POPS": 0,
+    "ADD": 0,
+    "SUB": 0,
+    "MUL": 0,
+    "IDIV": 0,
+    "LT": 0,
+    "GT": 0,
+    "EQ": 0,
+    "AND": 0,
+    "OR": 0,
+    "NOT": 0,
+    "INT2CHAR": 0,
+    "STRI2INT": 0,
+    "READ": 0,
+    "WRITE": 0,
+    "CONCAT": 0,
+    "STRLEN": 0,
+    "GETCHAR": 0,
+    "SETCHAR": 0,
+    "TYPE": 0,
+    "LABEL": 0,
+    "JUMP": 0,
+    "JUMPIFEQ": 0,
+    "JUMPIFNEQ": 0,
+    "EXIT": 0,
+    "DPRINT": 0,
+    "BREAK": 0
+}
+
 # Stats end
 
 def ErrPrint(err):
     print("ERR: " + err, file=sys.stderr)
 
 def PrintStats():
+    global opcodeStats
+
+    print(existingLabels)
+    print(fwjumps)
+    print(backjumps)
+
     statsFile = statsString[0].split("=")[1]
     with open(statsFile, "w") as file:
         for record in statsString:
             if record == "--loc":                       #OK
                 file.write(str(loc))
                 file.write("\n")
+
             elif record == "--comments":                #OK
                 file.write(str(comments))
                 file.write("\n")
+
             elif record == "--labels":                  #OK
                 file.write(str(len(existingLabels)))
                 file.write("\n")
+
             elif record == "--jumps":                   #OK
                 file.write(str(jumps))
                 file.write("\n")
-            elif record == "--fwjumps":
-                file.write(str(fwjumps))
+
+            elif record == "--fwjumps":                 #CHECK
+                fwCount = 0
+                for i in range(len(fwjumps)):
+                    if fwjumps[i] in existingLabels:
+                        fwCount += 1
+                        print("fw " + fwjumps[i])
+                file.write(str(fwCount))
                 file.write("\n")
-            elif record == "--backjumps":
-                file.write(str(backjumps))
+
+            elif record == "--backjumps":               #CHECK
+                file.write(str(len(backjumps)))
                 file.write("\n")
-            elif record == "--badjumps":
-                file.write(str(badjumps))
+                
+            elif record == "--badjumps":                #CHECK
+                badCount = 0
+                for i in range(len(fwjumps)):
+                    if fwjumps[i] not in existingLabels:
+                        badCount += 1
+                        print("bad " + fwjumps[i])
+                file.write(str(badCount))
+                file.write("\n")                
+
+            elif record == "--frequent":                #OK
+                opcodeStats = {k: v for k, v in sorted(opcodeStats.items(), key=lambda item: item[0])}
+                opcodeStats = {k: v for k, v in sorted(opcodeStats.items(), key=lambda item: item[1], reverse=True)}
+                opcodeStatsMax = max(opcodeStats.values())
+                maxCount = 0
+                for key, value in opcodeStats.items():
+                    if value == opcodeStatsMax:
+                        maxCount += 1
+
+                for i in range(maxCount):
+                    file.write(list(opcodeStats.keys())[i])
+                    if i != maxCount - 1:
+                        file.write(",")
                 file.write("\n")
-            elif record == "--frequent":
-                continue
+
             elif record.count("--print=") == 1:         #OK
                 file.write(record.split("=")[1])
                 file.write("\n")
+
             elif record == "--eol":                     #OK
                 file.write("")
                 file.write("\n")
@@ -208,14 +282,25 @@ def PrintReadArg(number):
 def PrintLabelArg(number):
     global wordCounter
     global jumps
+    global fwjumps
+    global backjumps
+
     if words[wordCounter].count("@") != 0:
         ErrPrint("Lexical or syntax error there")
         sys.exit(LEX_SYN_ERR)
     type = "label"
     value = words[wordCounter]
     print(f"    <arg{number} type=\"{type}\">{value}</arg{number}>")
+
+    if words[wordCounter-1] != "LABEL":
+        jumps += 1
+
+    if words[wordCounter-1].startswith("JUMP") or words[wordCounter-1] == "CALL" and value not in existingLabels:
+        fwjumps.append(value)
+    elif words[wordCounter-1] != "LABEL":
+        backjumps.append(value)
+
     wordCounter += 1
-    jumps += 1
     return
 
 def PrintEndInstruction():
@@ -271,7 +356,7 @@ def label():
     PrintLabelArg(1)
     PrintEndInstruction()
 
-    if words[wordCounter-1] not in existingLabels:
+    if words[wordCounter-1] not in existingLabels and words[wordCounter-2] == "LABEL":
         existingLabels.append(words[wordCounter-1])
         print(existingLabels)
     return
@@ -390,6 +475,7 @@ def LineCheck(line):
     global wordCounter
     global comments
     global loc
+    global opcodeStats
 
     if line.count("#") > 0:
         comments += 1
@@ -417,7 +503,9 @@ def LineCheck(line):
     words[0] = words[0].upper()
     for i in range(len(words)):
         if words[wordCounter] != " " or words[wordCounter] != "\n" or words[wordCounter] != "\t":
+            statsWCount = wordCounter
             switch.get(words[wordCounter], lambda: sys.exit(OPCODE_ERR))()
+            opcodeStats[words[statsWCount]] += 1
         
         if len(words) == wordCounter:
             return
@@ -436,3 +524,4 @@ if wordCounter == 0 and orderCounter == 0:
 print("</program>")
 
 PrintStats()
+        
