@@ -74,7 +74,9 @@ def ErrPrint(err):
 
 def PrintStats():
     global opcodeStats
+    global statsString
     statsFile = statsString[0].split("=")[1]
+    statsString.pop(0)
     with open(statsFile, "w") as file:
         for record in statsString:
             if record == "--loc":                       #OK
@@ -111,7 +113,7 @@ def PrintStats():
                     if fwjumps[i] not in existingLabels:
                         badCount += 1
                 file.write(str(badCount))
-                file.write("\n")                
+                file.write("\n")
 
             elif record == "--frequent":                #OK
                 opcodeStats = {k: v for k, v in sorted(opcodeStats.items(), key=lambda item: item[0])}
@@ -135,7 +137,12 @@ def PrintStats():
             elif record == "--eol":                     #OK
                 file.write("")
                 file.write("\n")
-
+            
+            elif record.startswith("--stats=") == 1:
+                index = statsString.index(record)
+                statsString = statsString[index:]
+                PrintStats()
+                break
 
 def ArgumentCheck():
     global statsString
@@ -159,9 +166,16 @@ def ArgumentCheck():
     if stats_count == 0:
         return
 
-    if stats_count > 1 or statsString[0].split("=")[0] != "--stats":
+    if statsString[0].split("=")[0] != "--stats":
         ErrPrint("Wrong number of arguments or combination of arguments")
         sys.exit(PARAMS_ERR)
+
+    if stats_count > 1:
+        for record in statsString:
+            if record.startswith("--stats=") == 1:
+                if statsString.count(record) > 1:
+                    ErrPrint("Wrong number of arguments or combination of arguments")
+                    sys.exit(PARAMS_ERR)
 
     return
 
