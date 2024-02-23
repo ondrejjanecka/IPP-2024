@@ -77,72 +77,77 @@ def PrintStats():
     global statsString
     statsFile = statsString[0].split("=")[1]
     statsString.pop(0)
-    with open(statsFile, "w") as file:
-        for record in statsString:
-            if record == "--loc":                       #OK
-                file.write(str(loc))
-                file.write("\n")
 
-            elif record == "--comments":                #OK
-                file.write(str(comments))
-                file.write("\n")
+    try:
+        with open(statsFile, "w") as file:
+            for record in statsString:
+                if record == "--loc":                       #OK
+                    file.write(str(loc))
+                    file.write("\n")
 
-            elif record == "--labels":                  #OK
-                file.write(str(len(existingLabels)))
-                file.write("\n")
+                elif record == "--comments":                #OK
+                    file.write(str(comments))
+                    file.write("\n")
 
-            elif record == "--jumps":                   #OK
-                file.write(str(jumps))
-                file.write("\n")
+                elif record == "--labels":                  #OK
+                    file.write(str(len(existingLabels)))
+                    file.write("\n")
 
-            elif record == "--fwjumps":                 #CHECK
-                fwCount = 0
-                for i in range(len(fwjumps)):
-                    if fwjumps[i] in existingLabels:
-                        fwCount += 1
-                file.write(str(fwCount))
-                file.write("\n")
+                elif record == "--jumps":                   #OK
+                    file.write(str(jumps))
+                    file.write("\n")
 
-            elif record == "--backjumps":               #CHECK
-                file.write(str(len(backjumps)))
-                file.write("\n")
+                elif record == "--fwjumps":                 #CHECK
+                    fwCount = 0
+                    for i in range(len(fwjumps)):
+                        if fwjumps[i] in existingLabels:
+                            fwCount += 1
+                    file.write(str(fwCount))
+                    file.write("\n")
+
+                elif record == "--backjumps":               #CHECK
+                    file.write(str(len(backjumps)))
+                    file.write("\n")
+                    
+                elif record == "--badjumps":                #CHECK
+                    badCount = 0
+                    for i in range(len(fwjumps)):
+                        if fwjumps[i] not in existingLabels:
+                            badCount += 1
+                    file.write(str(badCount))
+                    file.write("\n")
+
+                elif record == "--frequent":                #OK
+                    opcodeStats = {k: v for k, v in sorted(opcodeStats.items(), key=lambda item: item[0])}
+                    opcodeStats = {k: v for k, v in sorted(opcodeStats.items(), key=lambda item: item[1], reverse=True)}
+                    opcodeStatsMax = max(opcodeStats.values())
+                    maxCount = 0
+                    for key, value in opcodeStats.items():
+                        if value == opcodeStatsMax:
+                            maxCount += 1
+
+                    for i in range(maxCount):
+                        file.write(list(opcodeStats.keys())[i])
+                        if i != maxCount - 1:
+                            file.write(",")
+                    file.write("\n")
+
+                elif record.count("--print=") == 1:         #OK
+                    file.write(record.split("=")[1])
+                    file.write("\n")
+
+                elif record == "--eol":                     #OK
+                    file.write("")
+                    file.write("\n")
                 
-            elif record == "--badjumps":                #CHECK
-                badCount = 0
-                for i in range(len(fwjumps)):
-                    if fwjumps[i] not in existingLabels:
-                        badCount += 1
-                file.write(str(badCount))
-                file.write("\n")
-
-            elif record == "--frequent":                #OK
-                opcodeStats = {k: v for k, v in sorted(opcodeStats.items(), key=lambda item: item[0])}
-                opcodeStats = {k: v for k, v in sorted(opcodeStats.items(), key=lambda item: item[1], reverse=True)}
-                opcodeStatsMax = max(opcodeStats.values())
-                maxCount = 0
-                for key, value in opcodeStats.items():
-                    if value == opcodeStatsMax:
-                        maxCount += 1
-
-                for i in range(maxCount):
-                    file.write(list(opcodeStats.keys())[i])
-                    if i != maxCount - 1:
-                        file.write(",")
-                file.write("\n")
-
-            elif record.count("--print=") == 1:         #OK
-                file.write(record.split("=")[1])
-                file.write("\n")
-
-            elif record == "--eol":                     #OK
-                file.write("")
-                file.write("\n")
-            
-            elif record.startswith("--stats=") == 1:
-                index = statsString.index(record)
-                statsString = statsString[index:]
-                PrintStats()
-                break
+                elif record.startswith("--stats=") == 1:
+                    index = statsString.index(record)
+                    statsString = statsString[index:]
+                    PrintStats()
+                    break
+    except:
+        ErrPrint("Cannot open file")
+        sys.exit(OUTPUT_ERR)
 
 def ArgumentCheck():
     global statsString
