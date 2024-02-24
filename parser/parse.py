@@ -497,14 +497,14 @@ def LineCheck(line):
     if len(words) == 0:
         return
     if orderCounter == 0:
-        if words[wordCounter] == ".IPPcode24" and len(words) == 1:
+        if words[wordCounter].upper() == ".IPPCODE24" and len(words) == 1:
             orderCounter += 1
             return
         else:
             ErrPrint("Header error")
             sys.exit(HEADER_ERR)
 
-    if words[0] == ".IPPcode24":
+    if words[0].upper() == ".IPPCODE24":
         ErrPrint("Header error")
         sys.exit(LEX_SYN_ERR)
 
@@ -515,7 +515,7 @@ def LineCheck(line):
     for i in range(len(words)):
         if words[wordCounter] != " " or words[wordCounter] != "\n" or words[wordCounter] != "\t":
             statsWCount = wordCounter
-            switch.get(words[wordCounter], lambda: sys.exit(OPCODE_ERR))()
+            switch.get(words[wordCounter], lambda: (sys.exit(OPCODE_ERR), print("Unknown opcode")))()
             opcodeStats[words[statsWCount]] += 1
         
         if len(words) == wordCounter:
