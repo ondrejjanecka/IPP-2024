@@ -337,9 +337,14 @@ def varSymb():
 def noArgs():
     global words
     global wordCounter
+    global jumps
     if len(words) != 1:
         ErrPrint("Lexical or syntax error")
         sys.exit(LEX_SYN_ERR)
+
+    if words[wordCounter] == "RETURN":
+        jumps += 1
+   
     PrintInstructions(words[wordCounter])
     PrintEndInstruction()
     return
