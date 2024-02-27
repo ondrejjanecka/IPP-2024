@@ -1,3 +1,10 @@
+#####################################
+#           IPP 2023/2024           #
+# Project: parse.py                 #
+# Author: Ondřej Janečka (xjanec33) #
+# Date: 2024-03-05                  #
+#####################################
+
 import sys
 from sys import stdin
 import re
@@ -71,6 +78,43 @@ opcodeStats = {
 
 def ErrPrint(err):
     print("ERR: " + err, file=sys.stderr)
+
+def PrintHelp():
+    print(
+"""
+IPP 2023/2024 - 1. projekt - parse.py
+Skript parse.py slouží k analýze zdrojových kódů a generování statistik.
+
+Použití:
+python parse.py [volby] < [cesta_k_souboru]
+
+Volby:
+--help          - Vypíše nápovědu
+--stats=file    - Soubor, do kterého se vypíší statistiky
+--loc           - Počet řádků s instrukcemi
+--comments      - Počet řádků s komentáři
+--labels        - Počet definovaných návěští
+--jumps         - Počet skokových instrukcí
+--fwjumps       - Počet skokových instrukcí vpřed
+--backjumps     - Počet skokových instrukcí vzad
+--badjumps      - Počet skokových instrukcí na nedefinované návěští
+--frequent      - Nejčastěji používané instrukce
+--print=string  - Vypíše string
+--eol           - Vypíše prázdný řádek
+
+Příklady použití:
+1. Zpracuje vstupni soubor:
+   python parse.py < code.py
+2. Zobrazí počet řádků kódu a komentářů:
+   python parse.py --stats=stats.txt --loc --comments < code.py
+3. Zobrazí nejčastější prvky v kódu:
+   python parse.py --stats=stats.txt --frequent < code.py
+
+Poznámka:
+cesta_k_souboru udává cestu k analyzovanému souboru se zdrojovým kódem.
+""")
+    
+    return
 
 def PrintStats():
     global opcodeStats
@@ -156,7 +200,7 @@ def ArgumentCheck():
     for i in range(1, argC):
         arg = sys.argv[i]
         if arg == "--help":
-            print("Help")
+            PrintHelp()
             sys.exit(OK)
         elif arg.count("--stats=") == 1:
             statsString.append(sys.argv[i])
@@ -337,9 +381,14 @@ def varSymb():
 def noArgs():
     global words
     global wordCounter
+    global jumps
     if len(words) != 1:
         ErrPrint("Lexical or syntax error")
         sys.exit(LEX_SYN_ERR)
+
+    if words[wordCounter] == "RETURN":
+        jumps += 1
+   
     PrintInstructions(words[wordCounter])
     PrintEndInstruction()
     return
@@ -523,17 +572,21 @@ def LineCheck(line):
     return
 
 
-ArgumentCheck()
-PrintHeader()
-for line in stdin:
-    LineCheck(line)
+def main():
+    ArgumentCheck()
+    PrintHeader()
+    for line in stdin:
+        LineCheck(line)
 
-if wordCounter == 0 and orderCounter == 0:
-    ErrPrint("Lexical or syntax error")
-    sys.exit(HEADER_ERR)
+    if wordCounter == 0 and orderCounter == 0:
+        ErrPrint("Lexical or syntax error")
+        sys.exit(HEADER_ERR)
 
-print("</program>")
+    print("</program>")
 
-if len(statsString) != 0:
-    PrintStats()
-        
+    if len(statsString) != 0:
+        PrintStats() 
+    
+    sys.exit(OK)
+
+main()

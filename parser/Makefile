@@ -1,6 +1,9 @@
 run:
 	python3.10 parse.py < tests/test.test
 
+help:
+	python3.10 parse.py --help
+
 stats:
 	python3.10 parse.py --stats=stats.out --jumps --fwjumps --backjumps --badjumps < tests/test.test
 
