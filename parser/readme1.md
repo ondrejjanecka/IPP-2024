@@ -8,10 +8,9 @@
 
 1. Úvod
 2. Struktura kódu
-3. Implementace parseru
-4. Zpracování instrukcí
-5. Testování a ladění
-6. Závěr
+3. Zpracování instrukcí
+4. Testování a ladění
+5. Závěr
 
 ## Úvod
 
@@ -19,15 +18,11 @@ Dokumentace pospisuje způsob řešení první úlohy z projektu IPP 2024. Cíle
 
 ## Struktura kódu
 
-TODO
-
-## Implementace parseru
-
-TODO
+Kód je rozdělený do jednotlivých funkcí, které se následně volají v průběhu analýzy kódu.
 
 ## Zpracování instrukcí
 
-TODO
+Instrukce jsou rozděleny do osmi kategorií podle dostupných operandů pro každou instrukci. Následně proběhne kontrola typů a formátu. Poté je instrukce převedena do XML formátu spolu s případnými argumenty.
 
 ## Testování a ladění
 
@@ -35,4 +30,4 @@ Pro ověření správnosti parseru byly využity testovací skripty, které pokr
 
 ## Závěr
 
-TODO
+Implementace projektu je plně funkcní včetně implementace rozšíření STATP pro výpis statistik zdrojového kódu IPPcode24.

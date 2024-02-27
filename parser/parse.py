@@ -572,17 +572,21 @@ def LineCheck(line):
     return
 
 
-ArgumentCheck()
-PrintHeader()
-for line in stdin:
-    LineCheck(line)
+def main():
+    ArgumentCheck()
+    PrintHeader()
+    for line in stdin:
+        LineCheck(line)
 
-if wordCounter == 0 and orderCounter == 0:
-    ErrPrint("Lexical or syntax error")
-    sys.exit(HEADER_ERR)
+    if wordCounter == 0 and orderCounter == 0:
+        ErrPrint("Lexical or syntax error")
+        sys.exit(HEADER_ERR)
 
-print("</program>")
+    print("</program>")
 
-if len(statsString) != 0:
-    PrintStats()
-        
+    if len(statsString) != 0:
+        PrintStats() 
+    
+    sys.exit(OK)
+
+main()
