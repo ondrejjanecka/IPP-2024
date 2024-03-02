@@ -561,6 +561,11 @@ def LineCheck(line):
 
     wordCounter = 0
     words[0] = words[0].upper()
+
+    if words[0].isalnum() == False:
+        ErrPrint("Wrong opcode format")
+        sys.exit(OPCODE_ERR)
+
     for i in range(len(words)):
         if words[wordCounter] != " " or words[wordCounter] != "\n" or words[wordCounter] != "\t":
             statsWCount = wordCounter

@@ -1,7 +1,9 @@
 parser/supTest
 parser/tests
+unp
 *.out
 *.zip
+is_it_ok.sh
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
