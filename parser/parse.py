@@ -9,7 +9,7 @@ import sys
 from sys import stdin
 import re
 
-# Return codes
+# Return codes START
 OK = 0
 PARAMS_ERR = 10
 INPUT_ERR = 11
@@ -18,7 +18,7 @@ HEADER_ERR = 21
 OPCODE_ERR = 22
 LEX_SYN_ERR = 23
 INTERNAL_ERR = 99
-# Return codes end
+# Return codes END
 
 orderCounter = 0
 words = []
@@ -26,7 +26,7 @@ wordCounter = 0
 
 types = ["int", "bool", "string", "nil", "label", "type", "var"]
 
-# Stats
+# Stats START
 statsArgs = ["--stats", "--loc", "--comments", "--labels", "--jumps", "--fwjumps", "--backjumps", "--badjumps", "--frequent", "--eol"]
 statsString = []
 existingLabels = []
@@ -36,6 +36,7 @@ jumps = 0
 fwjumps = []
 backjumps = []
 
+# Opcodes for frequent stats
 opcodeStats = {
     "MOVE": 0,
     "CREATEFRAME": 0,
@@ -74,7 +75,7 @@ opcodeStats = {
     "BREAK": 0
 }
 
-# Stats end
+# Stats END
 
 def ErrPrint(err):
     print("ERR: " + err, file=sys.stderr)
@@ -125,23 +126,23 @@ def PrintStats():
     try:
         with open(statsFile, "w") as file:
             for record in statsString:
-                if record == "--loc":                       #OK
+                if record == "--loc":
                     file.write(str(loc))
                     file.write("\n")
 
-                elif record == "--comments":                #OK
+                elif record == "--comments":
                     file.write(str(comments))
                     file.write("\n")
 
-                elif record == "--labels":                  #OK
+                elif record == "--labels":
                     file.write(str(len(existingLabels)))
                     file.write("\n")
 
-                elif record == "--jumps":                   #OK
+                elif record == "--jumps":
                     file.write(str(jumps))
                     file.write("\n")
 
-                elif record == "--fwjumps":                 #CHECK
+                elif record == "--fwjumps":
                     fwCount = 0
                     for i in range(len(fwjumps)):
                         if fwjumps[i] in existingLabels:
@@ -149,11 +150,11 @@ def PrintStats():
                     file.write(str(fwCount))
                     file.write("\n")
 
-                elif record == "--backjumps":               #CHECK
+                elif record == "--backjumps":
                     file.write(str(len(backjumps)))
                     file.write("\n")
                     
-                elif record == "--badjumps":                #CHECK
+                elif record == "--badjumps":
                     badCount = 0
                     for i in range(len(fwjumps)):
                         if fwjumps[i] not in existingLabels:
@@ -161,7 +162,7 @@ def PrintStats():
                     file.write(str(badCount))
                     file.write("\n")
 
-                elif record == "--frequent":                #OK
+                elif record == "--frequent":
                     opcodeStats = {k: v for k, v in sorted(opcodeStats.items(), key=lambda item: item[0])}
                     opcodeStats = {k: v for k, v in sorted(opcodeStats.items(), key=lambda item: item[1], reverse=True)}
                     opcodeStatsMax = max(opcodeStats.values())
@@ -176,11 +177,11 @@ def PrintStats():
                             file.write(",")
                     file.write("\n")
 
-                elif record.count("--print=") == 1:         #OK
+                elif record.count("--print=") == 1:
                     file.write(record.split("=")[1])
                     file.write("\n")
 
-                elif record == "--eol":                     #OK
+                elif record == "--eol":
                     file.write("")
                     file.write("\n")
                 
@@ -193,6 +194,7 @@ def PrintStats():
         ErrPrint("Cannot open file")
         sys.exit(OUTPUT_ERR)
 
+# Function to check arguments and their combinations
 def ArgumentCheck():
     global statsString
     argC = len(sys.argv)
@@ -228,6 +230,7 @@ def ArgumentCheck():
 
     return
 
+# Function to convert special characters to XML
 def ConvertToXML(value):
     value = value.replace("&", "&amp;")
     value = value.replace("<", "&lt;")
@@ -241,6 +244,7 @@ def PrintHeader():
     print("<program language=\"IPPcode24\">")
     return
 
+# Function to check if the input is an integer
 def IntCheck(value):
     if value.isdigit() == False:
         pattern = r'^-?(0x[\dA-Fa-f]+|0o[0-7]+|\d+)$'
@@ -249,6 +253,7 @@ def IntCheck(value):
             sys.exit(LEX_SYN_ERR)
     return
 
+# Function to check validity of escape sequences
 def EscSeqCheck(value):
     list = []
     for i in range(len(value)):
@@ -262,6 +267,7 @@ def EscSeqCheck(value):
             sys.exit(LEX_SYN_ERR)
     return
 
+# Function to check if the input is a variable
 def VariableCheck(value):
     if value.count("@") != 1:
         ErrPrint("Lexical or syntax error there")
@@ -271,12 +277,14 @@ def VariableCheck(value):
         sys.exit(LEX_SYN_ERR)
     return
 
+# Function to check if the input is a symbol
 def SymbolCheck(value):
     if value.count("@") != 1:
         ErrPrint("Lexical or syntax error there")
         sys.exit(LEX_SYN_ERR)
     return
 
+# Function to print instructions in XML
 def PrintInstructions(opcode):
     global orderCounter
     global wordCounter
@@ -285,6 +293,7 @@ def PrintInstructions(opcode):
     wordCounter += 1
     return
 
+# Function to print arguments in XML and check type validity
 def PrintArg(number):
     global wordCounter
     type = words[wordCounter].split("@")[0]
@@ -323,6 +332,7 @@ def PrintArg(number):
     wordCounter += 1
     return
 
+# Special function to print arguments for READ instruction
 def PrintReadArg(number):
     global wordCounter
     type = "type"
@@ -335,6 +345,7 @@ def PrintReadArg(number):
     wordCounter += 1
     return
 
+# Special function to print arguments for label type arguments
 def PrintLabelArg(number):
     global wordCounter
     global jumps
@@ -363,6 +374,7 @@ def PrintEndInstruction():
     print("  </instruction>")
     return
 
+# Funcions based on a combination of instruction arguments START
 def varSymb():
     global words
     global wordCounter
@@ -417,6 +429,7 @@ def label():
     PrintLabelArg(1)
     PrintEndInstruction()
 
+    # Add unique labels to the list for statistics
     if words[wordCounter-1] not in existingLabels and words[wordCounter-2] == "LABEL":
         existingLabels.append(words[wordCounter-1])
     return
@@ -430,6 +443,7 @@ def symb():
     
     PrintInstructions(words[wordCounter])
 
+    # Checks for WRITE instruction
     if words[wordCounter-1] == "WRITE":
         type = words[wordCounter].split("@")[0]
         if type not in types and type != "GF" and type != "LF" and type != "TF":
@@ -489,6 +503,7 @@ def labelSymbSymb():
     PrintArg(3)
     PrintEndInstruction()
     return
+# Funcions based on a combination of instruction arguments END
 
 switch = {
     "MOVE": varSymb,
@@ -528,6 +543,7 @@ switch = {
     "BREAK": noArgs
 }
 
+# Function to read lines from stdin
 def LineCheck(line):
     global orderCounter
     global words
@@ -537,14 +553,18 @@ def LineCheck(line):
     global opcodeStats
     global statsString
 
+    # Count comments
     if line.count("#") > 0:
         comments += 1
 
+    # Remove comments and split line into words
     line = line.split("#")[0]
     words = line.split()
 
     if len(words) == 0:
         return
+    
+    # Header checks
     if orderCounter == 0:
         if words[wordCounter].upper() == ".IPPCODE24" and len(words) == 1:
             orderCounter += 1
@@ -562,10 +582,12 @@ def LineCheck(line):
     wordCounter = 0
     words[0] = words[0].upper()
 
+    # Opcode format check
     if words[0].isalnum() == False:
         ErrPrint("Wrong opcode format")
         sys.exit(OPCODE_ERR)
 
+    # Process instruction
     for i in range(len(words)):
         if words[wordCounter] != " " or words[wordCounter] != "\n" or words[wordCounter] != "\t":
             statsWCount = wordCounter
