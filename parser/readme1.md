@@ -14,11 +14,11 @@
 
 ## Úvod
 
-Dokumentace pospisuje způsob řešení první úlohy z projektu IPP 2024. Cílem úlohy bylo vytvořit parser skryptů v jazyce IPPcode24, který prování lexikální analýzu, syntaktickou analýzu a generuje odpovídající výstup ve formátu XML. Součástí úlohy byla i možnosti rozšíření, rozhodl jsem se pro implementaci rozšíření STATP, které sbírá statistiky zdrojového kódu IPPcode24.
+Dokumentace popisuje způsob řešení první úlohy z projektu IPP 2024. Cílem úlohy bylo vytvořit parser skriptů v jazyce IPPcode24, který prování lexikální analýzu, syntaktickou analýzu a generuje odpovídající výstup ve formátu XML. Součástí úlohy byla i možnosti rozšíření, rozhodl jsem se pro implementaci rozšíření STATP, které sbírá statistiky zdrojového kódu IPPcode24.
 
 ## Struktura kódu
 
-Kód je rozdělený do jednotlivých funkcí, které se následně volají v průběhu analýzy kódu.
+Kód je rozdělený do jednotlivých funkcí, které se následně volají v průběhu analýzy kódu. Především se jedná o rozdělení podle počtu a typu argumentů a kontroly těchto typů.
 
 ## Zpracování instrukcí
 
@@ -30,4 +30,4 @@ Pro ověření správnosti parseru byly využity testovací skripty, které pokr
 
 ## Závěr
 
-Implementace projektu je plně funkcní včetně implementace rozšíření STATP pro výpis statistik zdrojového kódu IPPcode24.
+Implementace projektu je plně funkční včetně implementace rozšíření STATP pro výpis statistik zdrojového kódu IPPcode24.
