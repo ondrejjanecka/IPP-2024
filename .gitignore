@@ -9,6 +9,7 @@ phpstan*
 is_it_ok.sh
 interpret/ipp-core/README.md
 interpret/ipp-core/interpret.php
+interpret/ipp-core/tests/sup
 
 parser/supTest
 parser/tests

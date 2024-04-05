@@ -10,7 +10,7 @@ TASK=2
 STUDENT_DIR=student
 SCRIPT=interpret.php
 
-all: check
+all: test
 
 pack: student/*
 	cd $(STUDENT_DIR) && zip -r $(LOGIN).zip  * -x __MACOSX/* .git/* && mv $(LOGIN).zip ../
@@ -28,3 +28,5 @@ clean:
 	$(RM) *.zip is_it_ok.log
 	$(RM) -r $(TEMP_DIR)
 
+test:
+	php8.3 interpret.php --source="tests/tes.xml"

@@ -20,8 +20,6 @@ class XmlParser
         $this->XmlPath = $XmlPath;
     }
 
-    
-
     public function parseXml()
     {
         $this->checkIntegrity();
@@ -123,9 +121,10 @@ class XmlParser
             {
                 if ($arg->nodeType == XML_ELEMENT_NODE) 
                 {
+                    $argName = (string)$arg->nodeName;
                     $type = (string)$arg->getAttribute("type");
                     $value = (string)$arg->nodeValue;
-                    $args[] = ['type' => $type, 'value' => $value];
+                    $args[$argName] = ['type' => $type, 'value' => $value];
                 }
             }
 
@@ -135,9 +134,6 @@ class XmlParser
             }
 
             $instructions[] = new Instruction($order, $opcode, $args);
-        
-            echo "Instruction: Order - $order, Opcode - $opcode\n";
-        
         }
 
         return $this->sortInstructions($instructions);
