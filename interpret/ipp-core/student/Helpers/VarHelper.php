@@ -6,8 +6,17 @@
 
 namespace IPP\Student\Helpers;
 
+/**
+ * The VarHelper class provides helper methods for working with variables.
+ */
 class VarHelper
 {
+    /**
+     * Retrieves the name of the variable from the given string representation.
+     *
+     * @param string $var The string representation of the variable.
+     * @return string The name of the variable.
+     */
     public static function getVarName($var): string
     {
         $pos = strpos($var, "@");
@@ -17,6 +26,12 @@ class VarHelper
         return $name;
     }
 
+    /**
+     * Retrieves the name of the frame from the given string representation.
+     *
+     * @param string $var The string representation of the variable.
+     * @return string The name of the frame.
+     */
     public static function getFrameName($var): string
     {
         $pos = strpos($var, "@");
