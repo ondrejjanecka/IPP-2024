@@ -24,7 +24,7 @@ class Instruction
     /**
      * @var array The arguments of the instruction.
      */
-    public $args = [];
+    private $args = [];
 
     /**
      * Constructs a new Instruction object.
@@ -52,5 +52,20 @@ class Instruction
             'type' => $type,
             'value' => $value
         ];
+    }
+
+    public function getFirstArg()
+    {
+        return $this->args['arg1'];
+    }
+
+    public function getSecondArg()
+    {
+        return $this->args['arg2'];
+    }
+
+    public function getThirdArg()
+    {
+        return $this->args['arg3'];
     }
 }

@@ -19,25 +19,27 @@ class InstructionExecutor
     private $globalFrame;
     private $localFrame;
     private $tempFrame;
-    private $string;
+    private $input;
+    private $stdout;
+    private $stderr;
 
-    public function __construct($instructions)
+    public function __construct($instructions, $input, $stdout, $stderr)
     {
         $this->instructions = $instructions;
         $this->globalFrame = new Frame();
         $this->localFrame = new Frame();
         $this->tempFrame = new Frame();
-        $this->string = "";
+        $this->input = $input;
+        $this->stdout = $stdout;
+        $this->stderr = $stderr;
     }
 
-    public function executeInstructions(): string
+    public function executeInstructions()
     {
         foreach ($this->instructions as $instruction) 
         {
             $this->executeInstruction($instruction);
         }
-
-        return $this->string;
     }
 
     private function executeInstruction($instruction)
@@ -156,10 +158,10 @@ class InstructionExecutor
 
     private function executeMove($instruction)
     {
-        $var = $instruction->args['arg1']['value'];
+        $var = $instruction->getFirstArg()['value'];
         $name = VarHelper::getVarName($var);
         $frame = VarHelper::getFrameName($var);
-        $symb = $instruction->args['arg2'];
+        $symb = $instruction->getSecondArg();
 
         if ($frame === "GF") 
         {
@@ -173,7 +175,7 @@ class InstructionExecutor
 
     private function executeDefVar($instruction)
     {
-        $var = $instruction->args['arg1']['value'];
+        $var = $instruction->getFirstArg()['value'];
 
         $variable = new Variable(VarHelper::getVarName($var), null);
 
@@ -187,8 +189,8 @@ class InstructionExecutor
 
     private function executeWrite($instruction)
     {
-        $type = $instruction->args['arg1']['type'];
-        $symb = $instruction->args['arg1'];
+        $type = $instruction->getFirstArg()['type'];
+        $symb = $instruction->getFirstArg();
 
         if ($type === "var") 
         {
@@ -199,12 +201,12 @@ class InstructionExecutor
             if ($frame === "GF") 
             {
                 $variable = $this->globalFrame->getVariable($name);
-                $this->string .= StringConvertor::convert($variable->getValue());
+                $this->stdout->writeString(StringConvertor::convert($variable->getValue()));
             }
         }
         else if ($type === "int" || $type === "bool" || $type === "string") 
         {
-            $this->string .= StringConvertor::convert($symb['value']);
+            $this->stdout->writeString(StringConvertor::convert($symb['value']));
         }
     }
 }
