@@ -108,12 +108,20 @@ class XmlParser
     public function getInstructions()
     {
         $instructions = [];
+        $orders = [];
 
         $instructionNodes = $this->XmlPath->getElementsByTagName("instruction");
 
         foreach ($instructionNodes as $instruction)
         {
             $order = (int)$instruction->getAttribute("order");
+            
+            if (in_array($order, $orders)) 
+            {
+                ErrorExit::printErrorExit("Duplicate order of instruction", ReturnCode::INVALID_SOURCE_STRUCTURE);
+            }
+            $orders[] = $order;
+
             $opcode = (string)$instruction->getAttribute("opcode");
             $args = [];
 
