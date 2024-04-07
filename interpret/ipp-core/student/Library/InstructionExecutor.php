@@ -209,7 +209,10 @@ class InstructionExecutor
  
         if ($variable->getFrame() === "GF") 
         {
-            $this->globalFrame->addVariable($variable);
+            if (!$this->globalFrame->variableExists($variable->getName())) 
+            {
+                $this->globalFrame->addVariable($variable);
+            }
         }
     }
 
@@ -237,28 +240,24 @@ class InstructionExecutor
 
     private function executeExit($instruction)
     {
-        // $symb = $instruction->getFirstArg();
+        $symb = $instruction->getFirstArg();
 
-        // print_r($symb);
+        if ($symb->gettype() === "int") 
+        {
+            exit((int) $symb->getValue());
+        }
+        elseif ($symb->gettype() === "var") 
+        {
+            $name = VarHelper::getVarName($symb->getValue());
 
-        // if ($symb['type'] === "int") 
-        // {
-        //     $this->stdout->writeString(StringConvertor::convert($symb['value']));
-        // }
-        // elseif ($symb['type'] === "var") 
-        // {
-        //     $variable = new Variable(VarHelper::getVarName($symb['value']), null);
-
-        //     $var = $symb['value'];
-        //     $name = VarHelper::getVarName($var);
-        //     $frame = VarHelper::getFrameName($var);
-
-        //     if ($frame === "GF") 
-        //     {
-        //         $variable = $this->globalFrame->getVariable($name);
-                
-
-        //     }
-        // }
+            if (VarHelper::getFrameName($symb->getValue()) === "GF") 
+            {
+                if ($this->globalFrame->variableExists($name)) 
+                {
+                    $variable = $this->globalFrame->getVariable($name);
+                    exit((int) $variable->getValue());
+                }
+            }
+        }
     }
 }   
