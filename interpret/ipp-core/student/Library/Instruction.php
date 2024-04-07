@@ -22,7 +22,7 @@ class Instruction
     public $opcode;
 
     /**
-     * @var array The arguments of the instruction.
+     * @var Argument[] The arguments of the instruction.
      */
     private $args = [];
 
@@ -31,7 +31,7 @@ class Instruction
      *
      * @param int $order The order of the instruction.
      * @param string $opcode The opcode of the instruction.
-     * @param array $args The arguments of the instruction.
+     * @param Argument[] $args The arguments of the instruction.
      */
     public function __construct($order, $opcode, $args)
     {
@@ -41,29 +41,30 @@ class Instruction
     }
 
     /**
-     * Adds a new argument to the instruction.
+     * Gets the first argument.
      *
-     * @param string $type The type of the argument.
-     * @param mixed $value The value of the argument.
+     * @return Argument The first argument.
      */
-    public function addArg($type, $value)
-    {
-        $this->args[] = [
-            'type' => $type,
-            'value' => $value
-        ];
-    }
-
     public function getFirstArg()
     {
         return $this->args['arg1'];
     }
 
+    /**
+     * Gets the second argument.
+     *
+     * @return Argument The second argument.
+     */
     public function getSecondArg()
     {
         return $this->args['arg2'];
     }
 
+    /**
+     * Gets the third argument.
+     *
+     * @return Argument The third argument.
+     */
     public function getThirdArg()
     {
         return $this->args['arg3'];

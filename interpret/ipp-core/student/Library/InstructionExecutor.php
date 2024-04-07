@@ -8,10 +8,14 @@ namespace IPP\Student\Library;
 
 use IPP\Student\Helpers\VarHelper;
 use IPP\Student\Library\Stack;
+use IPP\Student\Library\Argument;
 use IPP\Student\Library\Variable;
+use IPP\Student\Library\Constant;
 use IPP\Student\Library\Frame;
 use IPP\Student\Helpers\EscapeSequenceConvertor as StringConvertor;
-use IPP\Core\Settings;
+use IPP\Student\Helpers\TypeHelper;
+use IPP\Student\Exceptions\VariableAccessException;
+
 
 class InstructionExecutor
 {
@@ -36,8 +40,11 @@ class InstructionExecutor
 
     public function executeInstructions()
     {
+        // print_r($this->instructions);
+
         foreach ($this->instructions as $instruction) 
         {
+            // print_r($instruction);
             $this->executeInstruction($instruction);
         }
     }
@@ -142,9 +149,9 @@ class InstructionExecutor
             // case "JUMPIFNEQ":
             //     $this->executeJumpIfNEq($instruction);
             //     break;
-            // case "EXIT":
-            //     $this->executeExit($instruction);
-            //     break;
+            case "EXIT":
+                $this->executeExit($instruction);
+                break;
             // case "DPRINT":
             //     $this->executeDPrint($instruction);
             //     break;
@@ -158,30 +165,49 @@ class InstructionExecutor
 
     private function executeMove($instruction)
     {
-        $var = $instruction->getFirstArg()['value'];
-        $name = VarHelper::getVarName($var);
-        $frame = VarHelper::getFrameName($var);
-        $symb = $instruction->getSecondArg();
+        $arg1 = $instruction->getFirstArg();
+        $arg2 = $instruction->getSecondArg();
 
-        if ($frame === "GF") 
+        if ($this->globalFrame->variableExists(VarHelper::getVarName($arg1->getValue())) && VarHelper::getFrameName($arg1->getValue()) == "GF")
         {
-            if ($this->globalFrame->variableExists($name)) 
+            $var = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
+        }
+        else
+        {
+            throw new VariableAccessException();
+        }
+
+        if ($arg2->getType() === "var") 
+        {
+
+            if($this->globalFrame->variableExists(VarHelper::getVarName($arg2->getValue())))
             {
-                $variable = $this->globalFrame->getVariable($name);
-                $variable->setValue($symb);
+                $symb = $this->globalFrame->getVariable(VarHelper::getVarName($arg2->getValue()));
             }
+            else
+            {
+                throw new VariableAccessException();
+            }
+
+        }
+        else 
+        {
+            $symb = new Constant($arg2->getType(), $arg2->getValue());
+        }
+        
+        if ($var->getFrame() === "GF") 
+        {
+            $var->setValue($symb->getValue());
         }
     }
 
     private function executeDefVar($instruction)
     {
-        $var = $instruction->getFirstArg()['value'];
+        $var = $instruction->getFirstArg();
 
-        $variable = new Variable(VarHelper::getVarName($var), null);
-
-        $frame = VarHelper::getFrameName($var);
-
-        if ($frame === "GF") 
+        $variable = new Variable(VarHelper::getVarName($var->getValue()), VarHelper::getFrameName($var->getValue()));
+ 
+        if ($variable->getFrame() === "GF") 
         {
             $this->globalFrame->addVariable($variable);
         }
@@ -189,14 +215,13 @@ class InstructionExecutor
 
     private function executeWrite($instruction)
     {
-        $type = $instruction->getFirstArg()['type'];
         $symb = $instruction->getFirstArg();
+        $type = $symb->getType();
 
         if ($type === "var") 
         {
-            $var = $symb['value'];
-            $name = VarHelper::getVarName($var);
-            $frame = VarHelper::getFrameName($var);
+            $name = VarHelper::getVarName($symb->getValue());
+            $frame = VarHelper::getFrameName($symb->getValue());
 
             if ($frame === "GF") 
             {
@@ -206,7 +231,34 @@ class InstructionExecutor
         }
         else if ($type === "int" || $type === "bool" || $type === "string") 
         {
-            $this->stdout->writeString(StringConvertor::convert($symb['value']));
+            $this->stdout->writeString(StringConvertor::convert($symb->getValue()));
         }
     }
-}
+
+    private function executeExit($instruction)
+    {
+        // $symb = $instruction->getFirstArg();
+
+        // print_r($symb);
+
+        // if ($symb['type'] === "int") 
+        // {
+        //     $this->stdout->writeString(StringConvertor::convert($symb['value']));
+        // }
+        // elseif ($symb['type'] === "var") 
+        // {
+        //     $variable = new Variable(VarHelper::getVarName($symb['value']), null);
+
+        //     $var = $symb['value'];
+        //     $name = VarHelper::getVarName($var);
+        //     $frame = VarHelper::getFrameName($var);
+
+        //     if ($frame === "GF") 
+        //     {
+        //         $variable = $this->globalFrame->getVariable($name);
+                
+
+        //     }
+        // }
+    }
+}   

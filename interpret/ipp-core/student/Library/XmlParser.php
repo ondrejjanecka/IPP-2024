@@ -9,7 +9,9 @@ namespace IPP\Student\Library;
 use IPP\Student\Library\CustomError as ErrorExit;
 use IPP\Core\ReturnCode;
 use IPP\Student\Library\Instruction;
+use IPP\Student\Library\Argument;
 use IPP\Student\Helpers\OpcodeHelper;
+
 
 class XmlParser
 {
@@ -122,17 +124,17 @@ class XmlParser
             }
             $orders[] = $order;
 
-            $opcode = (string)$instruction->getAttribute("opcode");
+            $opcode = (string)strtoupper($instruction->getAttribute("opcode"));
             $args = [];
 
             foreach ($instruction->childNodes as $arg) 
             {
                 if ($arg->nodeType == XML_ELEMENT_NODE) 
                 {
-                    $argName = (string)$arg->nodeName;
+                    $label = (string)$arg->nodeName;
                     $type = (string)$arg->getAttribute("type");
                     $value = (string)$arg->nodeValue;
-                    $args[$argName] = ['type' => $type, 'value' => $value];
+                    $args[$label] = new Argument($label, $type, $value);
                 }
             }
 

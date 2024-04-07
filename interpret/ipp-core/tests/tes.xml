@@ -13,4 +13,29 @@
   <instruction order="1234" opcode="WRITE">
     <arg1 type="string">\010</arg1>
   </instruction>
+  <instruction order="11" opcode="WRITE">
+    <arg1 type="string">\010</arg1>
+  </instruction>
+  <instruction order="6" opcode="WRITE">
+    <arg1 type="string">\010</arg1>
+  </instruction>
+  <instruction order="9" opcode="WRITE">
+    <arg1 type="string">AHOJ</arg1>
+  </instruction>
+  <instruction order="1239" opcode="Exit">
+    <arg1 type="int">23</arg1>
+  </instruction>
+  <instruction order="10" opcode="DEFVAR">
+    <arg1 type="var">GF@b</arg1>
+  </instruction>
+  <instruction order="12" opcode="MOVE">
+    <arg1 type="var">GF@b</arg1>
+    <arg2 type="var">GF@c</arg2>
+  </instruction>
+  <instruction order="13" opcode="WRITE">
+    <arg1 type="var">GF@a</arg1>
+  </instruction>
+  <instruction order="14" opcode="WRITE">
+    <arg1 type="string">\010</arg1>
+  </instruction>
 </program>
