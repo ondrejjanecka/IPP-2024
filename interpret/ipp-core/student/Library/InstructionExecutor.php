@@ -115,12 +115,12 @@ class InstructionExecutor
             case "NOT":
                 $this->executeNot($instruction);
                 break;
-            // case "INT2CHAR":
-            //     $this->executeInt2Char($instruction);
-            //     break;
-            // case "STRI2INT":
-            //     $this->executeStri2Int($instruction);
-            //     break;
+            case "INT2CHAR":
+                $this->executeInt2Char($instruction);
+                break;
+            case "STRI2INT":
+                $this->executeStri2Int($instruction);
+                break;
             // case "READ":
             //     $this->executeRead($instruction);
             //     break;
@@ -139,9 +139,9 @@ class InstructionExecutor
             case "SETCHAR":
                 $this->executeSetChar($instruction);
                 break;
-            // case "TYPE":
-            //     $this->executeType($instruction);
-            //     break;
+            case "TYPE":
+                $this->executeType($instruction);
+                break;
             // case "LABEL":
             //     $this->executeLabel($instruction);
             //     break;
@@ -157,12 +157,10 @@ class InstructionExecutor
             case "EXIT":
                 $this->executeExit($instruction);
                 break;
-            // case "DPRINT":
-            //     $this->executeDPrint($instruction);
-            //     break;
-            // case "BREAK":
-            //     $this->executeBreak($instruction);
-            //     break;
+            case "DPRINT":
+                break;
+            case "BREAK":
+                break;
             default:
                 break;
         }
@@ -222,26 +220,23 @@ class InstructionExecutor
         {
             $this->stdout->writeString(StringConvertor::convert($symb->getValue()));
         }
+        else if ($type === "nil") 
+        {
+            $this->stdout->writeString("");
+        }
+        else
+        {
+            throw new StringOperationException();
+        }
     }
 
     private function executeExit($instruction)
     {
-        $symb = $instruction->getFirstArg();
+        $arg1 = $instruction->getFirstArg();
 
-        if ($symb->gettype() === "int") 
-        {
-            exit((int) $symb->getValue());
-        }
-        elseif ($symb->gettype() === "var") 
-        {
-            $name = VarHelper::getVarName($symb->getValue());
-
-            if (VarHelper::getFrameName($symb->getValue()) === "GF") 
-            {
-                $variable = $this->globalFrame->getVariable($name);
-                exit((int) $variable->getValue());
-            }
-        }
+        $symb = SymbolHelper::getConstant($arg1, "int", $this->globalFrame);
+        
+        exit((int) $symb->getValue());
     }
 
     private function executeArithmeticOp($instruction)
@@ -399,4 +394,67 @@ class InstructionExecutor
 
         $variable->setValue($string);
     }
-}   
+
+    private function executeType($instruction)
+    {
+        $arg1 = $instruction->getFirstArg();
+        $arg2 = $instruction->getSecondArg();
+
+        $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
+
+        $type = $arg2->getType();
+        
+        if ($type === "var") 
+        {
+            $type = $this->globalFrame->getVariable(VarHelper::getVarName($arg2->getValue()))->getType();
+            $variable->setValue($type);
+        }
+        else if ($type === "int" || $type === "bool" || $type === "string" || $type === "nil") 
+        {
+            $variable->setValue($type);
+        }
+        else
+        {
+            throw new OperandTypeException();
+        }
+    }
+
+    private function executeInt2Char($instruction)
+    {
+        $arg1 = $instruction->getFirstArg();
+        $arg2 = $instruction->getSecondArg();
+
+        $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
+
+        $symb = SymbolHelper::getConstant($arg2, "int", $this->globalFrame);
+
+        if ($symb->getValue() < 0 || $symb->getValue() > 1114112) 
+        {
+            throw new OperandValueException();
+        }
+
+        $variable->setValue(chr($symb->getValue()));
+    }
+
+    private function executeStri2Int($instruction)
+    {
+        $arg1 = $instruction->getFirstArg();
+        $arg2 = $instruction->getSecondArg();
+        $arg3 = $instruction->getThirdArg();
+
+        $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
+
+        $symb1 = SymbolHelper::getConstant($arg2, "string", $this->globalFrame);
+        $symb2 = SymbolHelper::getConstant($arg3, "int", $this->globalFrame);
+
+        $string = $symb1->getValue();
+        $index = $symb2->getValue();
+
+        if ($index < 0 || $index >= strlen($string)) 
+        {
+            throw new StringOperationException();
+        }
+
+        $variable->setValue(ord($string[$index]));
+    }
+}
