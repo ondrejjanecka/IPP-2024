@@ -80,9 +80,9 @@ class InstructionExecutor
             // case "POPS":
             //     $this->executePopS($instruction);
             //     break;
-            // case "ADD":
-            //     $this->executeAdd($instruction);
-            //     break;
+            case "ADD":
+                $this->executeAdd($instruction);
+                break;
             // case "SUB":
             //     $this->executeSub($instruction);
             //     break;
@@ -259,5 +259,66 @@ class InstructionExecutor
                 }
             }
         }
+    }
+
+    private function executeAdd($instruction)
+    {
+        $arg1 = $instruction->getFirstArg();
+        $arg2 = $instruction->getSecondArg();
+        $arg3 = $instruction->getThirdArg();
+
+        $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
+
+        if ($arg2->getType() === "var") 
+        {
+            $symb1 = $this->globalFrame->getVariable(VarHelper::getVarName($arg2->getValue()));
+        
+            if ($symb1->getType() === "int") 
+            {
+                $symb1 = new Constant($symb1->getType(), $symb1->getValue());
+            }
+            else
+            {
+                throw new VariableAccessException();
+            }
+        }
+        else if ($arg2->getType() === "int")
+        {
+            $symb1 = new Constant($arg2->getType(), $arg2->getValue());
+        }
+        else 
+        {
+            // Variable type exception
+            throw new VariableAccessException();
+        }
+
+        if ($arg3->getType() === "var") 
+        {
+            $symb2 = $this->globalFrame->getVariable(VarHelper::getVarName($arg3->getValue()));
+
+            echo $symb2->getValue();
+            echo $symb2->getType();
+            if ($symb2->getType() === "int") 
+            {
+                $symb2 = new Constant($symb2->getType(), $symb2->getValue());
+            }
+            else
+            {
+                throw new VariableAccessException();
+            }
+        }
+        else if ($arg3->getType() === "int")
+        {
+            $symb2 = new Constant($arg3->getType(), $arg3->getValue());
+        }
+        else 
+        {
+            // Variable type exception
+            throw new VariableAccessException();
+        }
+
+        $variable->setValue($symb1->getValue() + $symb2->getValue());
+
+        echo "New value of variable " . $variable->getName() . " is " . $variable->getValue() . "\n";
     }
 }   

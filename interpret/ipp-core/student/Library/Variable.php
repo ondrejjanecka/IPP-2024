@@ -42,7 +42,7 @@ class Variable extends VarHelper
 
     public function getType()
     {
-        if (is_int($this->value))
+        if (is_numeric($this->value))
             return "int";
         elseif (is_bool($this->value))
             return "bool";
