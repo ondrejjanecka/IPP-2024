@@ -19,6 +19,7 @@ use IPP\Student\Helpers\SymbolHelper;
 use IPP\Student\Exceptions\VariableAccessException;
 use IPP\Student\Exceptions\OperandTypeException;
 use IPP\Student\Exceptions\OperandValueException;
+use IPP\Student\Exceptions\StringOperationException;
 
 
 class InstructionExecutor
@@ -129,15 +130,15 @@ class InstructionExecutor
             case "CONCAT":
                 $this->executeConcat($instruction);
                 break;
-            // case "STRLEN":
-            //     $this->executeStrLen($instruction);
-            //     break;
-            // case "GETCHAR":
-            //     $this->executeGetChar($instruction);
-            //     break;
-            // case "SETCHAR":
-            //     $this->executeSetChar($instruction);
-            //     break;
+            case "STRLEN":
+                $this->executeStrLen($instruction);
+                break;
+            case "GETCHAR":
+                $this->executeGetChar($instruction);
+                break;
+            case "SETCHAR":
+                $this->executeSetChar($instruction);
+                break;
             // case "TYPE":
             //     $this->executeType($instruction);
             //     break;
@@ -334,5 +335,68 @@ class InstructionExecutor
         $symb2 = SymbolHelper::getConstant($arg3, "string", $this->globalFrame);
 
         $variable->setValue($symb1->getValue() . $symb2->getValue());
+    }
+
+    private function executeStrLen($instruction)
+    {
+        $arg1 = $instruction->getFirstArg();
+        $arg2 = $instruction->getSecondArg();
+
+        $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
+
+        $symb = SymbolHelper::getConstant($arg2, "string", $this->globalFrame);
+
+        $variable->setValue(strlen($symb->getValue()));
+    }
+
+    private function executeGetChar($instruction)
+    {
+        $arg1 = $instruction->getFirstArg();
+        $arg2 = $instruction->getSecondArg();
+        $arg3 = $instruction->getThirdArg();
+
+        $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
+
+        $symb1 = SymbolHelper::getConstant($arg2, "string", $this->globalFrame);
+        $symb2 = SymbolHelper::getConstant($arg3, "int", $this->globalFrame);
+
+        $string = $symb1->getValue();
+        $index = $symb2->getValue();
+
+        if ($index < 0 || $index >= strlen($string)) 
+        {
+            throw new StringOperationException();
+        }
+
+        $variable->setValue($string[$index]);
+    }
+
+    private function executeSetChar($instruction)
+    {
+        $arg1 = $instruction->getFirstArg();
+        $arg2 = $instruction->getSecondArg();
+        $arg3 = $instruction->getThirdArg();
+
+        $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
+        if ($variable->getType() !== "string") 
+            throw new OperandTypeException();
+
+        $symb1 = SymbolHelper::getConstant($arg2, "int", $this->globalFrame);
+        $symb2 = SymbolHelper::getConstant($arg3, "string", $this->globalFrame);
+
+        $string = $variable->getValue();
+        $index = $symb1->getValue();
+        if ($symb2->getValue() < 1) 
+            throw new StringOperationException();
+        $char = $symb2->getValue()[0];
+
+        if ($index < 0 || $index >= strlen($string)) 
+        {
+            throw new StringOperationException();
+        }
+
+        $string[$index] = $char;
+
+        $variable->setValue($string);
     }
 }   
