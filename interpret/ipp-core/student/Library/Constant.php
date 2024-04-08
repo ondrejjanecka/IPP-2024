@@ -14,7 +14,15 @@ class Constant
     public function __construct($type, $value)
     {
         $this->type = $type;
-        $this->value = $value;
+
+        if ($type === "int")
+            $this->value = (int)$value;
+        elseif ($type === "bool")
+            $this->value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+        elseif ($type === "string")
+            $this->value = (string)$value;
+        elseif ($type === "nil")
+            $this->value = null;
     }
 
     public function getType()

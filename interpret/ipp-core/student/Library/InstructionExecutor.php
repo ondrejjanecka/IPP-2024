@@ -83,32 +83,32 @@ class InstructionExecutor
             //     $this->executePopS($instruction);
             //     break;
             case "ADD":
-                $this->executeArithmeticOp($instruction, $instruction->opcode);
+                $this->executeArithmeticOp($instruction);
                 break;
             case "SUB":
-                $this->executeArithmeticOp($instruction, $instruction->opcode);
+                $this->executeArithmeticOp($instruction);
                 break;
             case "MUL":
-                $this->executeArithmeticOp($instruction, $instruction->opcode);
+                $this->executeArithmeticOp($instruction);
                 break;
             case "IDIV":
-                $this->executeArithmeticOp($instruction, $instruction->opcode);
+                $this->executeArithmeticOp($instruction);
                 break;
-            // case "LT":
-            //     $this->executeLT($instruction);
-            //     break;
-            // case "GT":
-            //     $this->executeGT($instruction);
-            //     break;
-            // case "EQ":
-            //     $this->executeEQ($instruction);
-            //     break;
-            // case "AND":
-            //     $this->executeAnd($instruction);
-            //     break;
-            // case "OR":
-            //     $this->executeOr($instruction);
-            //     break;
+            case "LT":
+                $this->executeRelationOp($instruction);
+                break;
+            case "GT":
+                $this->executeRelationOp($instruction);
+                break;
+            case "EQ":
+                $this->executeRelationOp($instruction);
+                break;
+            case "AND":
+                $this->executeAndOr($instruction);
+                break;
+            case "OR":
+                $this->executeAndOr($instruction);
+                break;
             // case "NOT":
             //     $this->executeNot($instruction);
             //     break;
@@ -263,8 +263,9 @@ class InstructionExecutor
         }
     }
 
-    private function executeArithmeticOp($instruction, string $operation)
+    private function executeArithmeticOp($instruction)
     {
+        $operation = $instruction->opcode;
         $arg1 = $instruction->getFirstArg();
         $arg2 = $instruction->getSecondArg();
         $arg3 = $instruction->getThirdArg();
@@ -335,6 +336,81 @@ class InstructionExecutor
                 throw new OperandValueException();
             }
             $variable->setValue($symb1->getValue() / $symb2->getValue());
+        }
+    }
+
+    private function executeRelationOp($instruction)
+    {
+        $operation = $instruction->opcode;
+        $arg1 = $instruction->getFirstArg();
+        $arg2 = $instruction->getSecondArg();
+        $arg3 = $instruction->getThirdArg();
+
+        $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
+
+        
+    }
+
+    private function executeAndOr($instruction)
+    {
+        $operation = $instruction->opcode;
+        $arg1 = $instruction->getFirstArg();
+        $arg2 = $instruction->getSecondArg();
+        $arg3 = $instruction->getThirdArg();
+
+        $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
+
+        if ($arg2->getType() === "var") 
+        {
+            $symb1 = $this->globalFrame->getVariable(VarHelper::getVarName($arg2->getValue()));
+        
+            if ($symb1->getType() === "bool") 
+            {
+                $symb1 = new Constant($symb1->getType(), $symb1->getValue());
+            }
+            else
+            {
+                throw new OperandTypeException();
+            }
+        }
+        else if ($arg2->getType() === "bool")
+        {
+            $symb1 = new Constant($arg2->getType(), $arg2->getValue());
+        }
+        else 
+        {
+            throw new OperandTypeException();
+        }
+
+        if ($arg3->getType() === "var") 
+        {
+            $symb2 = $this->globalFrame->getVariable(VarHelper::getVarName($arg3->getValue()));
+
+            if ($symb2->getType() === "bool") 
+            {
+                $symb2 = new Constant($symb2->getType(), $symb2->getValue());
+            }
+            else
+            {
+                throw new OperandTypeException();
+            }
+        }
+        else if ($arg3->getType() === "bool")
+        {
+            $symb2 = new Constant($arg3->getType(), $arg3->getValue());
+        }
+        else 
+        {
+            throw new OperandTypeException();
+        }
+
+        if ($operation === "AND") 
+        {
+            $variable->setValue($symb1->getValue() && $symb2->getValue());
+        }
+        elseif ($operation === "OR") 
+        {
+            $variable->setValue($symb1->getValue() || $symb2->getValue());
         }
     }
 }   
