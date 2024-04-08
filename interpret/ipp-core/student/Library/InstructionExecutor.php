@@ -14,6 +14,8 @@ use IPP\Student\Library\Constant;
 use IPP\Student\Library\Frame;
 use IPP\Student\Helpers\EscapeSequenceConvertor as StringConvertor;
 use IPP\Student\Helpers\TypeHelper;
+use IPP\Student\Helpers\SymbolHelper;
+
 use IPP\Student\Exceptions\VariableAccessException;
 use IPP\Student\Exceptions\OperandTypeException;
 use IPP\Student\Exceptions\OperandValueException;
@@ -124,9 +126,9 @@ class InstructionExecutor
             case "WRITE":
                 $this->executeWrite($instruction);
                 break;
-            // case "CONCAT":
-            //     $this->executeConcat($instruction);
-            //     break;
+            case "CONCAT":
+                $this->executeConcat($instruction);
+                break;
             // case "STRLEN":
             //     $this->executeStrLen($instruction);
             //     break;
@@ -250,49 +252,8 @@ class InstructionExecutor
 
         $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
 
-        if ($arg2->getType() === "var") 
-        {
-            $symb1 = $this->globalFrame->getVariable(VarHelper::getVarName($arg2->getValue()));
-        
-            if ($symb1->getType() === "int") 
-            {
-                $symb1 = new Constant($symb1->getType(), $symb1->getValue());
-            }
-            else
-            {
-                throw new OperandTypeException();
-            }
-        }
-        else if ($arg2->getType() === "int")
-        {
-            $symb1 = new Constant($arg2->getType(), $arg2->getValue());
-        }
-        else 
-        {
-            throw new OperandTypeException();
-        }
-
-        if ($arg3->getType() === "var") 
-        {
-            $symb2 = $this->globalFrame->getVariable(VarHelper::getVarName($arg3->getValue()));
-
-            if ($symb2->getType() === "int") 
-            {
-                $symb2 = new Constant($symb2->getType(), $symb2->getValue());
-            }
-            else
-            {
-                throw new OperandTypeException();
-            }
-        }
-        else if ($arg3->getType() === "int")
-        {
-            $symb2 = new Constant($arg3->getType(), $arg3->getValue());
-        }
-        else 
-        {
-            throw new OperandTypeException();
-        }
+        $symb1 = SymbolHelper::getConstant($arg2, "int", $this->globalFrame);
+        $symb2 = SymbolHelper::getConstant($arg3, "int", $this->globalFrame);
 
         if ($operation === "ADD") 
         {
@@ -336,49 +297,8 @@ class InstructionExecutor
 
         $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
 
-        if ($arg2->getType() === "var") 
-        {
-            $symb1 = $this->globalFrame->getVariable(VarHelper::getVarName($arg2->getValue()));
-        
-            if ($symb1->getType() === "bool") 
-            {
-                $symb1 = new Constant($symb1->getType(), $symb1->getValue());
-            }
-            else
-            {
-                throw new OperandTypeException();
-            }
-        }
-        else if ($arg2->getType() === "bool")
-        {
-            $symb1 = new Constant($arg2->getType(), $arg2->getValue());
-        }
-        else 
-        {
-            throw new OperandTypeException();
-        }
-
-        if ($arg3->getType() === "var") 
-        {
-            $symb2 = $this->globalFrame->getVariable(VarHelper::getVarName($arg3->getValue()));
-
-            if ($symb2->getType() === "bool") 
-            {
-                $symb2 = new Constant($symb2->getType(), $symb2->getValue());
-            }
-            else
-            {
-                throw new OperandTypeException();
-            }
-        }
-        else if ($arg3->getType() === "bool")
-        {
-            $symb2 = new Constant($arg3->getType(), $arg3->getValue());
-        }
-        else 
-        {
-            throw new OperandTypeException();
-        }
+        $symb1 = SymbolHelper::getConstant($arg2, "bool", $this->globalFrame);
+        $symb2 = SymbolHelper::getConstant($arg3, "bool", $this->globalFrame);
 
         if ($operation === "AND") 
         {
@@ -397,28 +317,22 @@ class InstructionExecutor
 
         $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
 
-        if ($arg2->getType() === "var") 
-        {
-            $symb = $this->globalFrame->getVariable(VarHelper::getVarName($arg2->getValue()));
-
-            if ($symb->getType() === "bool") 
-            {
-                $symb = new Constant($symb->getType(), $symb->getValue());
-            }
-            else
-            {
-                throw new OperandTypeException();
-            }
-        }
-        else if ($arg2->getType() === "bool")
-        {
-            $symb = new Constant($arg2->getType(), $arg2->getValue());
-        }
-        else 
-        {
-            throw new OperandTypeException();
-        }
+        $symb = SymbolHelper::getConstant($arg2, "bool", $this->globalFrame);
 
         $variable->setValue(!$symb->getValue());
+    }
+
+    private function executeConcat($instruction)
+    {
+        $arg1 = $instruction->getFirstArg();
+        $arg2 = $instruction->getSecondArg();
+        $arg3 = $instruction->getThirdArg();
+
+        $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
+
+        $symb1 = SymbolHelper::getConstant($arg2, "string", $this->globalFrame);
+        $symb2 = SymbolHelper::getConstant($arg3, "string", $this->globalFrame);
+
+        $variable->setValue($symb1->getValue() . $symb2->getValue());
     }
 }   

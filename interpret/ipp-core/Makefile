@@ -29,4 +29,4 @@ clean:
 	$(RM) -r $(TEMP_DIR)
 
 test:
-	php8.3 interpret.php --source="tests/tes.xml"
+	php8.3 interpret.php --source="tests/tes2.xml"
