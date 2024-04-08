@@ -109,9 +109,9 @@ class InstructionExecutor
             case "OR":
                 $this->executeAndOr($instruction);
                 break;
-            // case "NOT":
-            //     $this->executeNot($instruction);
-            //     break;
+            case "NOT":
+                $this->executeNot($instruction);
+                break;
             // case "INT2CHAR":
             //     $this->executeInt2Char($instruction);
             //     break;
@@ -412,5 +412,37 @@ class InstructionExecutor
         {
             $variable->setValue($symb1->getValue() || $symb2->getValue());
         }
+    }
+
+    private function executeNot($instruction)
+    {
+        $arg1 = $instruction->getFirstArg();
+        $arg2 = $instruction->getSecondArg();
+
+        $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
+
+        if ($arg2->getType() === "var") 
+        {
+            $symb = $this->globalFrame->getVariable(VarHelper::getVarName($arg2->getValue()));
+
+            if ($symb->getType() === "bool") 
+            {
+                $symb = new Constant($symb->getType(), $symb->getValue());
+            }
+            else
+            {
+                throw new OperandTypeException();
+            }
+        }
+        else if ($arg2->getType() === "bool")
+        {
+            $symb = new Constant($arg2->getType(), $arg2->getValue());
+        }
+        else 
+        {
+            throw new OperandTypeException();
+        }
+
+        $variable->setValue(!$symb->getValue());
     }
 }   

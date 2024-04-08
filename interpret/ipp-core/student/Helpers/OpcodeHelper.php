@@ -40,7 +40,8 @@ class OpcodeHelper
         "INT2CHAR",
         "READ",
         "STRLEN",
-        "TYPE"
+        "TYPE",
+        "NOT"
     ];
 
     private static $threeArgsOpcodes = [
@@ -54,7 +55,6 @@ class OpcodeHelper
         "EQ",
         "AND",
         "OR",
-        "NOT",
         "STRI2INT",
         "CONCAT",
         "GETCHAR",
