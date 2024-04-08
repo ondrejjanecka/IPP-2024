@@ -81,7 +81,7 @@ class Variable extends VarHelper
      *
      * @param mixed $value The new value of the variable.
      */
-    public function setValue($value)
+    public function setValue($value) : void
     {
         $this->value = $value;
     }

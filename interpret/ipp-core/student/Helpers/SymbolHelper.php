@@ -33,7 +33,7 @@ class SymbolHelper
         if ($arg->getType() === "var")
         {
             $variable = $frame->getVariable(VarHelper::getVarName($arg->getValue()));
-
+            
             if ($variable->getType() === $requestedType)
                 return new Constant($variable->getType(), $variable->getValue());
             else
@@ -49,6 +49,13 @@ class SymbolHelper
         } 
     }
 
+    /**
+     * Retrieves the constant and type based on the given argument and frame.
+     *
+     * @param Argument $arg The argument object.
+     * @param Frame $frame The frame object.
+     * @return Constant The constant object containing the type and value.
+     */
     public static function getConstantAndType(Argument $arg, Frame $frame)
     {
         if ($arg->getType() === "var")

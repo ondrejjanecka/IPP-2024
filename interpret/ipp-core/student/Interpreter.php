@@ -27,7 +27,8 @@ class Interpreter extends AbstractInterpreter
 
         $instructions = $xmlParser->getInstructions();
 
-        $executor = new executor($instructions, $this->input, $this->stdout, $this->stderr);
+        // $executor = new executor($instructions, $this->input, $this->stdout, $this->stderr);
+        $executor = new executor($instructions, $this->input, $this->stdout);
         $executor->executeInstructions();
         
         exit(0);

@@ -12,7 +12,7 @@ use IPP\Student\Exceptions\SemanticException;
 class Frame
 {
     /**
-     * @var array Holds the variables in the frame.
+     * @var array<Variable> Holds the variables in the frame.
      */
     private $variables = [];
 
@@ -21,7 +21,7 @@ class Frame
      *
      * @param Variable $variable The variable to add.
      */
-    public function addVariable(Variable $variable)
+    public function addVariable(Variable $variable) : void
     {
         if (!$this->variableExists($variable->getName()))
             $this->variables[$variable->getName()] = $variable;

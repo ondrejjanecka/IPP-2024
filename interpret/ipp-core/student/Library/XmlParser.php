@@ -11,34 +11,37 @@ use IPP\Core\ReturnCode;
 use IPP\Student\Library\Instruction;
 use IPP\Student\Library\Argument;
 use IPP\Student\Helpers\OpcodeHelper;
-
+use DOMDocument;
+use DOMElement;
 
 class XmlParser
 {
-    private $XmlPath;
+    private DOMDocument $XmlPath;
 
-    public function __construct($XmlPath)
+    public function __construct(DOMDocument $XmlPath)
     {
         $this->XmlPath = $XmlPath;
     }
 
-    public function parseXml()
+    public function parseXml() : void
     {
         $this->checkIntegrity();
         $this->checkRoot();
         $this->checkInstructions();
     }
 
-    private function checkIntegrity()
+    private function checkIntegrity() : void
     {
-        try
-        {
             $rootElement = $this->XmlPath->documentElement;
-        }
-        catch(\Exception $e)
-        {
-            ErrorExit::printErrorExit($e->getMessage(), ReturnCode::INPUT_FILE_ERROR);
-        }
+
+        // try
+        // {
+        //     $rootElement = $this->XmlPath->documentElement;
+        // }
+        // catch(\Exception $e)
+        // {
+        //     ErrorExit::printErrorExit($e->getMessage(), ReturnCode::INPUT_FILE_ERROR);
+        // }
     
         if ($rootElement->nodeName != "program")
         {
@@ -46,7 +49,7 @@ class XmlParser
         }
     }
 
-    private function checkRoot()
+    private function checkRoot() : void
     {
         $rootElement = $this->XmlPath->documentElement;
         if ($rootElement->nodeName != "program")
@@ -61,7 +64,7 @@ class XmlParser
         // TODO - zkontrolovat výskyt dalších atributů
     }
 
-    private function checkInstructions()
+    private function checkInstructions() : void
     {
         $instructions = $this->XmlPath->documentElement->childNodes;
         foreach ($instructions as $instruction)
@@ -104,9 +107,9 @@ class XmlParser
     /**
      * Retrieves the instructions from the XML file.
      *
-     * @return array The array of Instruction objects.
+     * @return array<Instruction> The array of Instruction objects.
      */
-    public function getInstructions()
+    public function getInstructions() : array
     {
         $instructions = [];
         $orders = [];
@@ -148,7 +151,13 @@ class XmlParser
         return $this->sortInstructions($instructions);
     }
 
-    private function sortInstructions($instructions)
+    /**
+     * Sorts the instructions by their order.
+     *
+     * @param array<Instruction> $instructions The array of Instruction objects.
+     * @return array<Instruction> The sorted array of Instruction objects.
+     */
+    private function sortInstructions(array $instructions) : array
     {
         usort($instructions, function($a, $b) {
             return $a->order - $b->order;

@@ -11,7 +11,7 @@ use IPP\Core\ReturnCode;
 
 class SemanticException extends IPPException
 {
-    public function __construct($message)
+    public function __construct(string $message = "Semantic error")
     {
         parent::__construct($message, ReturnCode::SEMANTIC_ERROR);
     }

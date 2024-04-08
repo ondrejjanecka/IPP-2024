@@ -11,7 +11,7 @@ use IPP\Core\ReturnCode;
 
 class ValueException extends IPPException
 {
-    public function __construct($message)
+    public function __construct(string $message = "Value error")
     {
         parent::__construct($message, ReturnCode::VALUE_ERROR);
     }

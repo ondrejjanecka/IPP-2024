@@ -23,12 +23,12 @@ class TypeHelper
     {
         if (is_numeric($variable))
             return "int";
+        elseif ($variable === null || $variable === "nil")
+            return "nil";
         elseif (is_bool($variable))
             return "bool";
         elseif (is_string($variable))
             return "string";
-        elseif ($variable === null)
-            return "nil";
         else
             return null;
     }

@@ -11,7 +11,7 @@ use IPP\Core\ReturnCode;
 
 class OperandValueException extends IPPException
 {
-    public function __construct($message = "Operand value error.")
+    public function __construct(string $message = "Operand value error")
     {
         parent::__construct($message, ReturnCode::OPERAND_VALUE_ERROR, null);
     }

@@ -12,19 +12,21 @@ namespace IPP\Student\Helpers;
  * This class provides helper methods for working with opcodes.
  */
 class OpcodeHelper
-{
-    private static $allowedOpcodes = [];
+{    
+    /** @var array<string> $allowedOpcodes */
+    private static array $allowedOpcodes = [];
 
+    /** @var array<string> $zeroArgsOpcodes */
+    private static array $zeroArgsOpcodes = [
+            "CREATEFRAME",
+            "PUSHFRAME",
+            "POPFRAME",
+            "RETURN",
+            "BREAK"
+        ];
 
-    private static $zeroArgsOpcodes = [
-        "CREATEFRAME",
-        "PUSHFRAME",
-        "POPFRAME",
-        "RETURN",
-        "BREAK"
-    ];
-
-    private static $oneArgsOpcodes = [
+    /** @var array<string> $oneArgsOpcodes */
+    private static array $oneArgsOpcodes = [
         "DEFVAR",
         "CALL",
         "PUSHS",
@@ -35,7 +37,8 @@ class OpcodeHelper
         "DPRINT"
     ];
 
-    private static $twoArgsOpcodes = [
+    /** @var array<string> $twoArgsOpcodes */
+    private static array $twoArgsOpcodes = [
         "MOVE",
         "INT2CHAR",
         "READ",
@@ -44,7 +47,8 @@ class OpcodeHelper
         "NOT"
     ];
 
-    private static $threeArgsOpcodes = [
+    /** @var array<string> $threeArgsOpcodes */
+    private static array $threeArgsOpcodes = [
         "POPS",
         "ADD",
         "SUB",

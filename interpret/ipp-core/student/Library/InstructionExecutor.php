@@ -15,46 +15,60 @@ use IPP\Student\Library\Frame;
 use IPP\Student\Helpers\EscapeSequenceConvertor as StringConvertor;
 use IPP\Student\Helpers\TypeHelper;
 use IPP\Student\Helpers\SymbolHelper;
+use IPP\Student\Library\Instruction;
 
 use IPP\Student\Exceptions\VariableAccessException;
 use IPP\Student\Exceptions\OperandTypeException;
 use IPP\Student\Exceptions\OperandValueException;
 use IPP\Student\Exceptions\StringOperationException;
+use IPP\Student\Exceptions\FrameAccessException;
 
+use IPP\Core\Interface\InputReader;
+use IPP\Core\Interface\OutputWriter;
+use IPP\Student\Exceptions\ValueException;
 
 class InstructionExecutor
 {
-    private $instructions;
-    private $globalFrame;
-    private $localFrame;
-    private $tempFrame;
-    private $input;
-    private $stdout;
-    private $stderr;
+    /**
+     * @var array<Instruction> Holds the instructions to execute.
+     */
+    private array $instructions;
 
-    public function __construct($instructions, $input, $stdout, $stderr)
+    private Frame $globalFrame;
+
+    // private $localFrame;
+    // private $tempFrame;
+    
+    private InputReader $input;
+    private OutputWriter $stdout;
+    // private $stderr;
+
+    // public function __construct($instructions, $input, $stdout, $stderr)
+    /**
+     * @param array<Instruction> $instructions
+     * @param InputReader $input
+     * @param OutputWriter $stdout
+     */
+    public function __construct(array $instructions, InputReader $input, OutputWriter $stdout)
     {
         $this->instructions = $instructions;
         $this->globalFrame = new Frame();
-        $this->localFrame = new Frame();
-        $this->tempFrame = new Frame();
+        // $this->localFrame = new Frame();
+        // $this->tempFrame = new Frame();
         $this->input = $input;
         $this->stdout = $stdout;
-        $this->stderr = $stderr;
+        // $this->stderr = $stderr;
     }
 
-    public function executeInstructions()
+    public function executeInstructions() : void
     {
-        // print_r($this->instructions);
-
         foreach ($this->instructions as $instruction) 
         {
-            // print_r($instruction);
             $this->executeInstruction($instruction);
         }
     }
 
-    private function executeInstruction($instruction)
+    private function executeInstruction(Instruction $instruction) : void
     {
         switch ($instruction->opcode) 
         {
@@ -166,7 +180,7 @@ class InstructionExecutor
         }
     }
 
-    private function executeMove($instruction)
+    private function executeMove(Instruction $instruction) : void
     {
         $arg1 = $instruction->getFirstArg();
         $arg2 = $instruction->getSecondArg();
@@ -188,7 +202,7 @@ class InstructionExecutor
         }
     }
 
-    private function executeDefVar($instruction)
+    private function executeDefVar(Instruction $instruction) : void
     {
         $var = $instruction->getFirstArg();
 
@@ -200,7 +214,7 @@ class InstructionExecutor
         }
     }
 
-    private function executeWrite($instruction)
+    private function executeWrite(Instruction $instruction) : void
     {
         $symb = $instruction->getFirstArg();
         $type = $symb->getType();
@@ -230,7 +244,7 @@ class InstructionExecutor
         }
     }
 
-    private function executeExit($instruction)
+    private function executeExit(Instruction $instruction) : void
     {
         $arg1 = $instruction->getFirstArg();
 
@@ -239,7 +253,7 @@ class InstructionExecutor
         exit((int) $symb->getValue());
     }
 
-    private function executeArithmeticOp($instruction)
+    private function executeArithmeticOp(Instruction $instruction) : void
     {
         $operation = $instruction->opcode;
         $arg1 = $instruction->getFirstArg();
@@ -274,7 +288,7 @@ class InstructionExecutor
         }
     }
 
-    private function executeRelationOp($instruction)
+    private function executeRelationOp(Instruction $instruction) : void
     {
         $operation = $instruction->opcode;
         $arg1 = $instruction->getFirstArg();
@@ -324,7 +338,7 @@ class InstructionExecutor
         }
     }
 
-    private function executeAndOr($instruction)
+    private function executeAndOr(Instruction $instruction) : void
     {
         $operation = $instruction->opcode;
         $arg1 = $instruction->getFirstArg();
@@ -346,7 +360,7 @@ class InstructionExecutor
         }
     }
 
-    private function executeNot($instruction)
+    private function executeNot(Instruction $instruction) : void
     {
         $arg1 = $instruction->getFirstArg();
         $arg2 = $instruction->getSecondArg();
@@ -358,7 +372,7 @@ class InstructionExecutor
         $variable->setValue(!$symb->getValue());
     }
 
-    private function executeConcat($instruction)
+    private function executeConcat(Instruction $instruction) : void
     {
         $arg1 = $instruction->getFirstArg();
         $arg2 = $instruction->getSecondArg();
@@ -372,7 +386,7 @@ class InstructionExecutor
         $variable->setValue($symb1->getValue() . $symb2->getValue());
     }
 
-    private function executeStrLen($instruction)
+    private function executeStrLen(Instruction $instruction) : void
     {
         $arg1 = $instruction->getFirstArg();
         $arg2 = $instruction->getSecondArg();
@@ -384,7 +398,7 @@ class InstructionExecutor
         $variable->setValue(strlen($symb->getValue()));
     }
 
-    private function executeGetChar($instruction)
+    private function executeGetChar(Instruction $instruction) : void
     {
         $arg1 = $instruction->getFirstArg();
         $arg2 = $instruction->getSecondArg();
@@ -406,7 +420,7 @@ class InstructionExecutor
         $variable->setValue($string[$index]);
     }
 
-    private function executeSetChar($instruction)
+    private function executeSetChar(Instruction $instruction) : void
     {
         $arg1 = $instruction->getFirstArg();
         $arg2 = $instruction->getSecondArg();
@@ -416,7 +430,7 @@ class InstructionExecutor
         if ($variable->getType() !== "string") 
             throw new OperandTypeException();
 
-        $symb1 = SymbolHelper::getConstant($arg2, "int", $this->globalFrame);
+        $symb1 = SymbolHelper::getConstant($arg2, "int", $this->globalFrame);      
         $symb2 = SymbolHelper::getConstant($arg3, "string", $this->globalFrame);
 
         $string = $variable->getValue();
@@ -435,19 +449,24 @@ class InstructionExecutor
         $variable->setValue($string);
     }
 
-    private function executeType($instruction)
+    private function executeType(Instruction $instruction) : void
     {
         $arg1 = $instruction->getFirstArg();
         $arg2 = $instruction->getSecondArg();
 
         $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
-
-        $symb = SymbolHelper::getConstantAndType($arg2, $this->globalFrame);
-
-        $variable->setValue($symb->getType());
+        try
+        {
+            $symb = SymbolHelper::getConstantAndType($arg2, $this->globalFrame);
+            $variable->setValue($symb->getType());
+        }
+        catch (ValueException $e)
+        {
+            $variable->setValue("nil");
+        }
     }
 
-    private function executeInt2Char($instruction)
+    private function executeInt2Char(Instruction $instruction) : void
     {
         $arg1 = $instruction->getFirstArg();
         $arg2 = $instruction->getSecondArg();
@@ -464,7 +483,7 @@ class InstructionExecutor
         $variable->setValue(chr($symb->getValue()));
     }
 
-    private function executeStri2Int($instruction)
+    private function executeStri2Int(Instruction $instruction) : void
     {
         $arg1 = $instruction->getFirstArg();
         $arg2 = $instruction->getSecondArg();
@@ -486,7 +505,7 @@ class InstructionExecutor
         $variable->setValue(ord($string[$index]));
     }
 
-    private function executeRead($instruction)
+    private function executeRead(Instruction $instruction) : void
     {
         $arg1 = $instruction->getFirstArg();
         $arg2 = $instruction->getSecondArg();
@@ -497,7 +516,7 @@ class InstructionExecutor
 
         $input = $this->input->readString();
 
-        if ($input === false || ($type !== "int" && $type !== "bool" && $type !== "string")) 
+        if ($input === null || ($type !== "int" && $type !== "bool" && $type !== "string")) 
         {
             $variable->setValue("nil");
             $variable->setValue("nil");
@@ -522,10 +541,6 @@ class InstructionExecutor
         else if ($type === "string") 
         {
             $variable->setValue($input);
-        }
-        else
-        {
-            throw new OperandTypeException();
         }
     }
 }
