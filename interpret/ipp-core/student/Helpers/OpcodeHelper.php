@@ -30,6 +30,7 @@ class OpcodeHelper
         "DEFVAR",
         "CALL",
         "PUSHS",
+        "POPS",
         "WRITE",
         "LABEL",
         "JUMP",
@@ -49,7 +50,6 @@ class OpcodeHelper
 
     /** @var array<string> $threeArgsOpcodes */
     private static array $threeArgsOpcodes = [
-        "POPS",
         "ADD",
         "SUB",
         "MUL",

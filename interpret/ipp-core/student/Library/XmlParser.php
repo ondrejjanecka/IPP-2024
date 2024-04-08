@@ -12,7 +12,6 @@ use IPP\Student\Library\Instruction;
 use IPP\Student\Library\Argument;
 use IPP\Student\Helpers\OpcodeHelper;
 use DOMDocument;
-use DOMElement;
 
 class XmlParser
 {

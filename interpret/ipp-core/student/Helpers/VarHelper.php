@@ -6,6 +6,8 @@
 
 namespace IPP\Student\Helpers;
 
+use IPP\Student\Exceptions\InvalidXmlException;
+
 /**
  * The VarHelper class provides helper methods for working with variables.
  */
@@ -34,7 +36,10 @@ class VarHelper
      */
     public static function getFrameName($var): string
     {
-        $pos = strpos($var, "@");
+        (int) $pos = strpos($var, "@");
+
+        if ($pos == null)
+            throw new InvalidXmlException("Invalid XML format");
 
         $name = substr($var, 0, $pos);
 

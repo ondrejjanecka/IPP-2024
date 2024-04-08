@@ -8,20 +8,16 @@ namespace IPP\Student\Library;
 
 use IPP\Student\Helpers\VarHelper;
 use IPP\Student\Library\Stack;
-use IPP\Student\Library\Argument;
 use IPP\Student\Library\Variable;
 use IPP\Student\Library\Constant;
 use IPP\Student\Library\Frame;
 use IPP\Student\Helpers\EscapeSequenceConvertor as StringConvertor;
-use IPP\Student\Helpers\TypeHelper;
 use IPP\Student\Helpers\SymbolHelper;
 use IPP\Student\Library\Instruction;
 
-use IPP\Student\Exceptions\VariableAccessException;
 use IPP\Student\Exceptions\OperandTypeException;
 use IPP\Student\Exceptions\OperandValueException;
 use IPP\Student\Exceptions\StringOperationException;
-use IPP\Student\Exceptions\FrameAccessException;
 
 use IPP\Core\Interface\InputReader;
 use IPP\Core\Interface\OutputWriter;
@@ -199,6 +195,7 @@ class InstructionExecutor
         if ($variable->getFrame() === "GF") 
         {
             $variable->setValue($symb->getValue());
+            $variable->setType($symb->getType());
         }
     }
 
@@ -227,12 +224,28 @@ class InstructionExecutor
             if ($frame === "GF") 
             {
                 $variable = $this->globalFrame->getVariable($name);
-                $this->stdout->writeString(StringConvertor::convert($variable->getValue()));
+
+                if ($variable->getType() === "nil") 
+                {
+                    $this->stdout->writeString("");
+                    return;
+                }
+                else if ($variable->getType() === "bool")
+                {
+                    $this->stdout->writeString($variable->getValue() ? "true" : "false");
+                    return;
+                }
+                else 
+                    $this->stdout->writeString(StringConvertor::convert($variable->getValue()));
             }
         }
-        else if ($type === "int" || $type === "bool" || $type === "string") 
+        else if ($type === "int" || $type === "string") 
         {
             $this->stdout->writeString(StringConvertor::convert($symb->getValue()));
+        }
+        else if ($type === "bool") 
+        {
+            $this->stdout->writeString($symb->getValue() ? "true" : "false");
         }
         else if ($type === "nil") 
         {
@@ -286,6 +299,7 @@ class InstructionExecutor
             }
             $variable->setValue($symb1->getValue() / $symb2->getValue());
         }
+        $variable->setType("int");
     }
 
     private function executeRelationOp(Instruction $instruction) : void
@@ -336,6 +350,8 @@ class InstructionExecutor
             else
                 throw new OperandTypeException("Invalid operand type for EQ operation");
         }
+
+        $variable->setType("bool");
     }
 
     private function executeAndOr(Instruction $instruction) : void
@@ -358,6 +374,8 @@ class InstructionExecutor
         {
             $variable->setValue($symb1->getValue() || $symb2->getValue());
         }
+
+        $variable->setType("bool");
     }
 
     private function executeNot(Instruction $instruction) : void
@@ -370,6 +388,7 @@ class InstructionExecutor
         $symb = SymbolHelper::getConstant($arg2, "bool", $this->globalFrame);
 
         $variable->setValue(!$symb->getValue());
+        $variable->setType("bool");
     }
 
     private function executeConcat(Instruction $instruction) : void
@@ -384,6 +403,7 @@ class InstructionExecutor
         $symb2 = SymbolHelper::getConstant($arg3, "string", $this->globalFrame);
 
         $variable->setValue($symb1->getValue() . $symb2->getValue());
+        $variable->setType("string");
     }
 
     private function executeStrLen(Instruction $instruction) : void
@@ -396,6 +416,7 @@ class InstructionExecutor
         $symb = SymbolHelper::getConstant($arg2, "string", $this->globalFrame);
 
         $variable->setValue(strlen($symb->getValue()));
+        $variable->setType("int");
     }
 
     private function executeGetChar(Instruction $instruction) : void
@@ -418,6 +439,7 @@ class InstructionExecutor
         }
 
         $variable->setValue($string[$index]);
+        $variable->setType("string");
     }
 
     private function executeSetChar(Instruction $instruction) : void
@@ -447,6 +469,7 @@ class InstructionExecutor
         $string[$index] = $char;
 
         $variable->setValue($string);
+        $variable->setType("string");
     }
 
     private function executeType(Instruction $instruction) : void
@@ -464,6 +487,7 @@ class InstructionExecutor
         {
             $variable->setValue("nil");
         }
+        $variable->setType("string");
     }
 
     private function executeInt2Char(Instruction $instruction) : void
@@ -481,6 +505,7 @@ class InstructionExecutor
         }
 
         $variable->setValue(chr($symb->getValue()));
+        $variable->setType("string");
     }
 
     private function executeStri2Int(Instruction $instruction) : void
@@ -503,6 +528,7 @@ class InstructionExecutor
         }
 
         $variable->setValue(ord($string[$index]));
+        $variable->setType("int");
     }
 
     private function executeRead(Instruction $instruction) : void
@@ -519,7 +545,7 @@ class InstructionExecutor
         if ($input === null || ($type !== "int" && $type !== "bool" && $type !== "string")) 
         {
             $variable->setValue("nil");
-            $variable->setValue("nil");
+            $variable->setType("nil");
             return;
         }
 
@@ -528,19 +554,24 @@ class InstructionExecutor
             if (is_numeric($input)) 
             {
                 $variable->setValue((int) $input);
+                $variable->setType("int");
             }
             else
             {
-                $variable->setValue(0);
+                // Possible problems
+                $variable->setValue("nil");
+                $variable->setType("nil");
             }
         }
         else if ($type === "bool") 
         {
             $variable->setValue(filter_var($input, FILTER_VALIDATE_BOOLEAN));
+            $variable->setType("bool");            
         }
         else if ($type === "string") 
         {
             $variable->setValue($input);
+            $variable->setType("string");
         }
     }
 }

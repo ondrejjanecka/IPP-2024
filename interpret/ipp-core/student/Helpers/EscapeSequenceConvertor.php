@@ -23,7 +23,7 @@ class EscapeSequenceConvertor
     {
         $string = str_replace('\032', " ", $string);
         $string = preg_replace_callback('/\\\\([0-9]{3})/', function($matches) {
-            $char = chr(octdec($matches[1]));
+            $char = chr((int) octdec($matches[1]));
             return $char;
         }, $string);
     

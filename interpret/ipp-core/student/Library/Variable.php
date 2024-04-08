@@ -7,7 +7,6 @@
 namespace IPP\Student\Library;
 
 use IPP\Student\Helpers\VarHelper;
-use IPP\Student\Helpers\TypeHelper;
 use IPP\Student\Exceptions\ValueException;
 
 /**
@@ -29,6 +28,11 @@ class Variable extends VarHelper
      * @var mixed The value of the variable.
      */
     private $value;
+
+    /**
+     * @var string The type of the variable.
+     */
+    private $type;
 
     /**
      * Constructs a new Variable object.
@@ -93,6 +97,16 @@ class Variable extends VarHelper
      */
     public function getType()
     {
-        return TypeHelper::getType($this->value);   
+        return $this->type;   
+    }
+
+    /**
+     * Sets the type of the variable.
+     *
+     * @param string $type The new type of the variable.
+     */
+    public function setType($type) : void
+    {
+        $this->type = $type;
     }
 }
