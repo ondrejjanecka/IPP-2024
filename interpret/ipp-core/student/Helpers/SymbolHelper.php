@@ -48,4 +48,17 @@ class SymbolHelper
             throw new OperandTypeException("Expected type $requestedType, got " . $arg->getType());
         } 
     }
+
+    public static function getConstantAndType(Argument $arg, Frame $frame)
+    {
+        if ($arg->getType() === "var")
+        {
+            $variable = $frame->getVariable(VarHelper::getVarName($arg->getValue()));
+            return new Constant($variable->getType(), $variable->getValue());
+        }
+        else
+        {
+            return new Constant($arg->getType(), $arg->getValue());
+        }
+    }
 }

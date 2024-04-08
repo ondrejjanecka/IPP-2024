@@ -37,7 +37,7 @@ class Constant
         elseif ($type === "string" && is_string($value))
             $this->value = (string)$value;
         elseif ($type === "nil")
-            $this->value = null;
+            $this->value = "nil";
     }
 
     /**

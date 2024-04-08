@@ -121,9 +121,9 @@ class InstructionExecutor
             case "STRI2INT":
                 $this->executeStri2Int($instruction);
                 break;
-            // case "READ":
-            //     $this->executeRead($instruction);
-            //     break;
+            case "READ":
+                $this->executeRead($instruction);
+                break;
             case "WRITE":
                 $this->executeWrite($instruction);
                 break;
@@ -255,15 +255,15 @@ class InstructionExecutor
         {
             $variable->setValue($symb1->getValue() + $symb2->getValue());
         }
-        elseif ($operation === "SUB") 
+        else if ($operation === "SUB") 
         {
             $variable->setValue($symb1->getValue() - $symb2->getValue());
         }
-        elseif ($operation === "MUL") 
+        else if ($operation === "MUL") 
         {
             $variable->setValue($symb1->getValue() * $symb2->getValue());
         }
-        elseif ($operation === "IDIV") 
+        else if ($operation === "IDIV") 
         {
             if ($symb2->getValue() === 0) 
             {
@@ -282,6 +282,46 @@ class InstructionExecutor
         $arg3 = $instruction->getThirdArg();
 
         $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
+
+        $symb1 = SymbolHelper::getConstantAndType($arg2, $this->globalFrame);
+        $symb2 = SymbolHelper::getConstantAndType($arg3, $this->globalFrame);
+
+        if ($symb1->getType() !== $symb2->getType()) 
+        {
+            throw new OperandTypeException();
+        }
+
+        if ($operation === "LT") 
+        {
+            if ($symb1->getType() === "int" || $symb1->getType() === "bool")
+                $variable->setValue($symb1->getValue() < $symb2->getValue());
+            else if ($symb1->getType() === "string")
+                $variable->setValue(strcmp($symb1->getValue(), $symb2->getValue()) < 0);
+            else
+                throw new OperandTypeException("Invalid operand type for LT operation");
+        }
+
+        else if ($operation === "GT") 
+        {
+            if ($symb1->getType() === "int" || $symb1->getType() === "bool")
+                $variable->setValue($symb1->getValue() > $symb2->getValue());
+            else if ($symb1->getType() === "string")
+                $variable->setValue(strcmp($symb1->getValue(), $symb2->getValue()) > 0);
+            else
+                throw new OperandTypeException("Invalid operand type for GT operation");
+        }
+
+        else if ($operation === "EQ") 
+        {
+            if ($symb1->getType() === "int" || $symb1->getType() === "bool")
+                $variable->setValue($symb1->getValue() == $symb2->getValue());
+            else if ($symb1->getType() === "string")
+                $variable->setValue(strcmp($symb1->getValue(), $symb2->getValue()) == 0);
+            else if ($symb1->getType() === "nil") 
+                $variable->setValue($symb2->getType() === "nil");
+            else
+                throw new OperandTypeException("Invalid operand type for EQ operation");
+        }
     }
 
     private function executeAndOr($instruction)
@@ -300,7 +340,7 @@ class InstructionExecutor
         {
             $variable->setValue($symb1->getValue() && $symb2->getValue());
         }
-        elseif ($operation === "OR") 
+        else if ($operation === "OR") 
         {
             $variable->setValue($symb1->getValue() || $symb2->getValue());
         }
@@ -402,21 +442,9 @@ class InstructionExecutor
 
         $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
 
-        $type = $arg2->getType();
-        
-        if ($type === "var") 
-        {
-            $type = $this->globalFrame->getVariable(VarHelper::getVarName($arg2->getValue()))->getType();
-            $variable->setValue($type);
-        }
-        else if ($type === "int" || $type === "bool" || $type === "string" || $type === "nil") 
-        {
-            $variable->setValue($type);
-        }
-        else
-        {
-            throw new OperandTypeException();
-        }
+        $symb = SymbolHelper::getConstantAndType($arg2, $this->globalFrame);
+
+        $variable->setValue($symb->getType());
     }
 
     private function executeInt2Char($instruction)
@@ -456,5 +484,48 @@ class InstructionExecutor
         }
 
         $variable->setValue(ord($string[$index]));
+    }
+
+    private function executeRead($instruction)
+    {
+        $arg1 = $instruction->getFirstArg();
+        $arg2 = $instruction->getSecondArg();
+
+        $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
+
+        $type = $arg2->getValue();
+
+        $input = $this->input->readString();
+
+        if ($input === false || ($type !== "int" && $type !== "bool" && $type !== "string")) 
+        {
+            $variable->setValue("nil");
+            $variable->setValue("nil");
+            return;
+        }
+
+        if ($type === "int") 
+        {
+            if (is_numeric($input)) 
+            {
+                $variable->setValue((int) $input);
+            }
+            else
+            {
+                $variable->setValue(0);
+            }
+        }
+        else if ($type === "bool") 
+        {
+            $variable->setValue(filter_var($input, FILTER_VALIDATE_BOOLEAN));
+        }
+        else if ($type === "string") 
+        {
+            $variable->setValue($input);
+        }
+        else
+        {
+            throw new OperandTypeException();
+        }
     }
 }
