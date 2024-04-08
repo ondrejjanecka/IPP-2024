@@ -11,6 +11,7 @@ interpret/ipp-core/README.md
 interpret/ipp-core/interpret.php
 interpret/ipp-core/tests/sup
 interpret/ipp-core/tmp
+interpret/ipp-core/tests/t
 
 parser/supTest
 parser/tests

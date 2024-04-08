@@ -8,6 +8,7 @@ namespace IPP\Student\Library;
 
 use IPP\Student\Helpers\VarHelper;
 use IPP\Student\Helpers\TypeHelper;
+use IPP\Student\Exceptions\ValueException;
 
 /**
  * Represents a variable in the program.
@@ -68,7 +69,11 @@ class Variable extends VarHelper
      */
     public function getValue()
     {
-        return $this->value;
+        if (is_null($this->value ))
+            throw new ValueException("Value is missing");
+
+        else
+            return $this->value;
     }
 
     /**

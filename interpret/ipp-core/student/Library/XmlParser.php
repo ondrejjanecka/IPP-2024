@@ -132,7 +132,7 @@ class XmlParser
                 {
                     $label = (string)$arg->nodeName;
                     $type = (string)$arg->getAttribute("type");
-                    $value = (string)$arg->nodeValue;
+                    $value = trim((string)$arg->nodeValue);
                     $args[$label] = new Argument($type, $value);
                 }
             }

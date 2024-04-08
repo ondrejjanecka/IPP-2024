@@ -4,6 +4,7 @@ namespace IPP\Student\Library;
 
 use IPP\Student\Library\Variable;
 use IPP\Student\Exceptions\VariableAccessException;
+use IPP\Student\Exceptions\SemanticException;
 
 /**
  * Represents a frame in the interpreter's memory.
@@ -24,6 +25,8 @@ class Frame
     {
         if (!$this->variableExists($variable->getName()))
             $this->variables[$variable->getName()] = $variable;
+        else
+            throw new SemanticException("Variable {$variable->getName()} already exists in this frame");
     }
 
     /**
