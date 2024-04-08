@@ -170,36 +170,20 @@ class InstructionExecutor
         $arg1 = $instruction->getFirstArg();
         $arg2 = $instruction->getSecondArg();
 
-        if ($this->globalFrame->variableExists(VarHelper::getVarName($arg1->getValue())) && VarHelper::getFrameName($arg1->getValue()) == "GF")
-        {
-            $var = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
-        }
-        else
-        {
-            throw new VariableAccessException();
-        }
+        $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
 
         if ($arg2->getType() === "var") 
         {
-
-            if($this->globalFrame->variableExists(VarHelper::getVarName($arg2->getValue())))
-            {
-                $symb = $this->globalFrame->getVariable(VarHelper::getVarName($arg2->getValue()));
-            }
-            else
-            {
-                throw new VariableAccessException();
-            }
-
+            $symb = $this->globalFrame->getVariable(VarHelper::getVarName($arg2->getValue()));
         }
         else 
         {
             $symb = new Constant($arg2->getType(), $arg2->getValue());
         }
         
-        if ($var->getFrame() === "GF") 
+        if ($variable->getFrame() === "GF") 
         {
-            $var->setValue($symb->getValue());
+            $variable->setValue($symb->getValue());
         }
     }
 
@@ -211,10 +195,7 @@ class InstructionExecutor
  
         if ($variable->getFrame() === "GF") 
         {
-            if (!$this->globalFrame->variableExists($variable->getName())) 
-            {
-                $this->globalFrame->addVariable($variable);
-            }
+            $this->globalFrame->addVariable($variable); 
         }
     }
 
@@ -254,11 +235,8 @@ class InstructionExecutor
 
             if (VarHelper::getFrameName($symb->getValue()) === "GF") 
             {
-                if ($this->globalFrame->variableExists($name)) 
-                {
-                    $variable = $this->globalFrame->getVariable($name);
-                    exit((int) $variable->getValue());
-                }
+                $variable = $this->globalFrame->getVariable($name);
+                exit((int) $variable->getValue());
             }
         }
     }
@@ -347,8 +325,6 @@ class InstructionExecutor
         $arg3 = $instruction->getThirdArg();
 
         $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
-
-        
     }
 
     private function executeAndOr($instruction)
