@@ -30,11 +30,11 @@ class Constant
     {
         $this->type = $type;
 
-        if ($type === "int")
+        if ($type === "int" && is_numeric($value))
             $this->value = (int)$value;
         elseif ($type === "bool")
             $this->value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
-        elseif ($type === "string")
+        elseif ($type === "string" && is_string($value))
             $this->value = (string)$value;
         elseif ($type === "nil")
             $this->value = null;

@@ -43,7 +43,6 @@ class Frame
         {
             throw new VariableAccessException("Variable $name does not exist in this frame");
         }
-        return $this->variables[$name];
     }
 
     /**

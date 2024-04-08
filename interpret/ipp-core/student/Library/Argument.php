@@ -27,7 +27,7 @@ class Argument
      * @param string $type The type of the argument.
      * @param mixed $value The value of the argument.
      */
-    public function __construct($label, $type, $value)
+    public function __construct($type, $value)
     {
         $this->type = $type;
         $this->value = $value;

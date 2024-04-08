@@ -30,19 +30,6 @@ class Interpreter extends AbstractInterpreter
         $executor = new executor($instructions, $this->input, $this->stdout, $this->stderr);
         $executor->executeInstructions();
         
-        // foreach ($instructions as $instruction) 
-        // {
-        //     // echo $instruction->order . " " . $instruction->opcode . "\n";
-        // }
-
-        // $ins = $instructions[1];
-
-        // foreach ($ins->args as $arg) 
-        // {
-        //     echo $arg['type'] . " " . $arg['value'] . "\n";
-        // }
-        // echo "\n";
         exit(0);
-        // throw new NotImplementedException;
     }
 }

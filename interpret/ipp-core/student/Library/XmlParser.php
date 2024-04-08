@@ -33,7 +33,6 @@ class XmlParser
     {
         try
         {
-            // Získání kořenového elementu z DOMDocument
             $rootElement = $this->XmlPath->documentElement;
         }
         catch(\Exception $e)
@@ -134,7 +133,7 @@ class XmlParser
                     $label = (string)$arg->nodeName;
                     $type = (string)$arg->getAttribute("type");
                     $value = (string)$arg->nodeValue;
-                    $args[$label] = new Argument($label, $type, $value);
+                    $args[$label] = new Argument($type, $value);
                 }
             }
 
