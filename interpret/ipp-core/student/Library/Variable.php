@@ -7,6 +7,7 @@
 namespace IPP\Student\Library;
 
 use IPP\Student\Helpers\VarHelper;
+use IPP\Student\Helpers\TypeHelper;
 
 class Variable extends VarHelper
 {
@@ -42,15 +43,6 @@ class Variable extends VarHelper
 
     public function getType()
     {
-        if (is_numeric($this->value))
-            return "int";
-        elseif (is_bool($this->value))
-            return "bool";
-        elseif (is_string($this->value))
-            return "string";
-        elseif ($this->value === null)
-            return "nil";
-        else
-            return null;    
+        return TypeHelper::getType($this->value);   
     }
 }

@@ -1,6 +1,6 @@
 <?php
 /**
- * IPP - PHP Project Helpers
+ * IPP - PHP Project Exceptions
  * @author Ondřej Janečka
  */
 

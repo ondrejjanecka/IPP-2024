@@ -10,7 +10,7 @@ class TypeHelper
 {
     public static function getType($variable)
     {
-        if (is_int($variable))
+        if (is_numeric($variable))
             return "int";
         elseif (is_bool($variable))
             return "bool";

@@ -15,6 +15,8 @@ use IPP\Student\Library\Frame;
 use IPP\Student\Helpers\EscapeSequenceConvertor as StringConvertor;
 use IPP\Student\Helpers\TypeHelper;
 use IPP\Student\Exceptions\VariableAccessException;
+use IPP\Student\Exceptions\OperandTypeException;
+use IPP\Student\Exceptions\OperandValueException;
 
 
 class InstructionExecutor
@@ -81,17 +83,17 @@ class InstructionExecutor
             //     $this->executePopS($instruction);
             //     break;
             case "ADD":
-                $this->executeAdd($instruction);
+                $this->executeArithmeticOp($instruction, $instruction->opcode);
                 break;
-            // case "SUB":
-            //     $this->executeSub($instruction);
-            //     break;
-            // case "MUL":
-            //     $this->executeMul($instruction);
-            //     break;
-            // case "IDIV":
-            //     $this->executeIDiv($instruction);
-            //     break;
+            case "SUB":
+                $this->executeArithmeticOp($instruction, $instruction->opcode);
+                break;
+            case "MUL":
+                $this->executeArithmeticOp($instruction, $instruction->opcode);
+                break;
+            case "IDIV":
+                $this->executeArithmeticOp($instruction, $instruction->opcode);
+                break;
             // case "LT":
             //     $this->executeLT($instruction);
             //     break;
@@ -261,7 +263,7 @@ class InstructionExecutor
         }
     }
 
-    private function executeAdd($instruction)
+    private function executeArithmeticOp($instruction, string $operation)
     {
         $arg1 = $instruction->getFirstArg();
         $arg2 = $instruction->getSecondArg();
@@ -279,7 +281,7 @@ class InstructionExecutor
             }
             else
             {
-                throw new VariableAccessException();
+                throw new OperandTypeException();
             }
         }
         else if ($arg2->getType() === "int")
@@ -288,23 +290,20 @@ class InstructionExecutor
         }
         else 
         {
-            // Variable type exception
-            throw new VariableAccessException();
+            throw new OperandTypeException();
         }
 
         if ($arg3->getType() === "var") 
         {
             $symb2 = $this->globalFrame->getVariable(VarHelper::getVarName($arg3->getValue()));
 
-            echo $symb2->getValue();
-            echo $symb2->getType();
             if ($symb2->getType() === "int") 
             {
                 $symb2 = new Constant($symb2->getType(), $symb2->getValue());
             }
             else
             {
-                throw new VariableAccessException();
+                throw new OperandTypeException();
             }
         }
         else if ($arg3->getType() === "int")
@@ -313,12 +312,29 @@ class InstructionExecutor
         }
         else 
         {
-            // Variable type exception
-            throw new VariableAccessException();
+            throw new OperandTypeException();
         }
 
-        $variable->setValue($symb1->getValue() + $symb2->getValue());
-
-        echo "New value of variable " . $variable->getName() . " is " . $variable->getValue() . "\n";
+        if ($operation === "ADD") 
+        {
+            $variable->setValue($symb1->getValue() + $symb2->getValue());
+        }
+        elseif ($operation === "SUB") 
+        {
+            $variable->setValue($symb1->getValue() - $symb2->getValue());
+        }
+        elseif ($operation === "MUL") 
+        {
+            $variable->setValue($symb1->getValue() * $symb2->getValue());
+        }
+        elseif ($operation === "IDIV") 
+        {
+            if ($symb2->getValue() === 0) 
+            {
+                // Division by zero exception
+                throw new OperandValueException();
+            }
+            $variable->setValue($symb1->getValue() / $symb2->getValue());
+        }
     }
 }   
