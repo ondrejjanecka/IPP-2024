@@ -13,6 +13,6 @@ class OperandTypeException extends IPPException
 {
     public function __construct(string $message = "Operand type error")
     {
-        parent::__construct($message, ReturnCode::OPERAND_TYPE_ERROR, null);
+        parent::__construct($message, ReturnCode::OPERAND_TYPE_ERROR);
     }
 }

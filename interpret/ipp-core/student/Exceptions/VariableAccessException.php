@@ -13,6 +13,6 @@ class VariableAccessException extends IPPException
 {
     public function __construct(string $message = "Variable access error")
     {
-        parent::__construct($message, ReturnCode::VARIABLE_ACCESS_ERROR, null);
+        parent::__construct($message, ReturnCode::VARIABLE_ACCESS_ERROR);
     }
 }

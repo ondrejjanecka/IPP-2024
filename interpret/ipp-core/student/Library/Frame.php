@@ -1,4 +1,8 @@
 <?php
+/**
+ * IPP - PHP Project Library
+ * @author Ondřej Janečka
+ */
 
 namespace IPP\Student\Library;
 
@@ -16,10 +20,13 @@ class Frame
      */
     private $variables = [];
 
+
     /**
      * Adds a variable to the frame.
      *
-     * @param Variable $variable The variable to add.
+     * @param Variable $variable The variable to be added.
+     * @throws SemanticException If the variable already exists in the frame.
+     * @return void
      */
     public function addVariable(Variable $variable) : void
     {

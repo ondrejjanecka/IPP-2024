@@ -25,7 +25,7 @@ class SymbolHelper
      *
      * @param Argument $arg The argument object.
      * @param string $requestedType The requested type of the constant.
-     * @param Frame $frame The frame object.
+     * @param FrameLogic $frameLogic The frame logic object.
      * @return Constant The constant value.
      * @throws OperandTypeException If the argument type does not match the requested type.
      */
@@ -55,7 +55,7 @@ class SymbolHelper
      * Retrieves the constant and type based on the given argument and frame.
      *
      * @param Argument $arg The argument object.
-     * @param Frame $frame The frame object.
+     * @param FrameLogic $frameLogic The frame logic object.
      * @return Constant The constant object containing the type and value.
      */
     public static function getConstantAndType(Argument $arg, FrameLogic $frameLogic)

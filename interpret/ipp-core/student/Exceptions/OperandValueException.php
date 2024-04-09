@@ -13,6 +13,6 @@ class OperandValueException extends IPPException
 {
     public function __construct(string $message = "Operand value error")
     {
-        parent::__construct($message, ReturnCode::OPERAND_VALUE_ERROR, null);
+        parent::__construct($message, ReturnCode::OPERAND_VALUE_ERROR);
     }
 }

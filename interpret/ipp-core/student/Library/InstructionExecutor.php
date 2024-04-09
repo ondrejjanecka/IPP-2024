@@ -6,25 +6,32 @@
 
 namespace IPP\Student\Library;
 
-use IPP\Student\Helpers\VarHelper;
-use IPP\Student\Library\Stack;
-use IPP\Student\Library\Variable;
-use IPP\Student\Library\Constant;
-use IPP\Student\Library\Frame;
-use IPP\Student\Helpers\EscapeSequenceConvertor as StringConvertor;
-use IPP\Student\Helpers\SymbolHelper;
-use IPP\Student\Library\Instruction;
-use IPP\Student\Library\FrameLogic;
+use IPP\Student\Helpers\{
+    VarHelper,
+    EscapeSequenceConvertor as StringConvertor,
+    SymbolHelper
+};
 
-use IPP\Student\Exceptions\OperandTypeException;
-use IPP\Student\Exceptions\OperandValueException;
-use IPP\Student\Exceptions\StringOperationException;
-use IPP\Student\Exceptions\FrameAccessException;
+use IPP\Student\Library\{
+    Variable,
+    Constant,
+    Instruction,
+    FrameLogic,
+    DataStack
+};
 
-use IPP\Core\Interface\InputReader;
-use IPP\Core\Interface\OutputWriter;
-use IPP\Student\Exceptions\InvalidSourceStructureException;
-use IPP\Student\Exceptions\ValueException;
+use IPP\Student\Exceptions\{
+    OperandTypeException,
+    OperandValueException,
+    StringOperationException,
+    InvalidSourceStructureException,
+    ValueException
+};
+
+use IPP\Core\Interface\{
+    InputReader,
+    OutputWriter
+};
 
 class InstructionExecutor
 {
@@ -33,18 +40,12 @@ class InstructionExecutor
      */
     private array $instructions;
 
-    private Frame $globalFrame;
-
     private FrameLogic $frameLogic; 
-    // private $localFrame;
-    // private $tempFrame;
-    // private Stack $frameStack;
+    private DataStack $dataStack;
     
     private InputReader $input;
     private OutputWriter $stdout;
-    // private $stderr;
 
-    // public function __construct($instructions, $input, $stdout, $stderr)
     /**
      * @param array<Instruction> $instructions
      * @param InputReader $input
@@ -53,11 +54,10 @@ class InstructionExecutor
     public function __construct(array $instructions, InputReader $input, OutputWriter $stdout)
     {
         $this->instructions = $instructions;
-        $this->globalFrame = new Frame();
         $this->frameLogic = new FrameLogic();
+        $this->dataStack = new DataStack();
         $this->input = $input;
         $this->stdout = $stdout;
-        // $this->stderr = $stderr;
     }
 
     public function executeInstructions() : void
@@ -93,12 +93,12 @@ class InstructionExecutor
             // case "RETURN":
             //     $this->executeReturn($instruction);
             //     break;
-            // case "PUSHS":
-            //     $this->executePushS($instruction);
-            //     break;
-            // case "POPS":
-            //     $this->executePopS($instruction);
-            //     break;
+            case "PUSHS":
+                $this->executePushs($instruction);
+                break;
+            case "POPS":
+                $this->executePops($instruction);
+                break;
             case "ADD":
                 $this->executeArithmeticOp($instruction);
                 break;
@@ -180,21 +180,12 @@ class InstructionExecutor
         }
     }
 
-    private function executeCreateFrame() : void
-    {
-        $this->frameLogic->createFrame();
-    }
-
-    private function executePushFrame() : void
-    {
-        $this->frameLogic->pushTempFrame();
-    }
-
-    private function executePopFrame() : void
-    {
-        $this->frameLogic->popFrame();
-    }
-
+    /**
+     * Executes the MOVE instruction.
+     *
+     * @param Instruction $instruction The move instruction to execute.
+     * @return void
+     */
     private function executeMove(Instruction $instruction) : void
     {
         $arg1 = $instruction->getFirstArg();
@@ -218,16 +209,104 @@ class InstructionExecutor
         $variable->setType($symb->getType());
     }
 
+    /**
+     * Executes the CREATEFRAME instruction.
+     * Creates a new temporary frame in the frame stack.
+     *
+     * @return void
+     */
+    private function executeCreateFrame() : void
+    {
+        $this->frameLogic->createFrame();
+    }
+
+    /**
+     * Executes the PUSHFRAME instruction.
+     * Pushes the temporary frame onto the frame stack. 
+     * Makes the temporary frame the local frame.
+     *
+     * @return void
+     */
+    private function executePushFrame() : void
+    {
+        $this->frameLogic->pushTempFrame();
+    }
+
+    /**
+     * Executes the POPFRAME instruction.
+     * Pops the top frame from the frame stack to the temporary frame.
+     *
+     * @return void
+     */
+    private function executePopFrame() : void
+    {
+        $this->frameLogic->popFrame();
+    }
+
+    /**
+     * Executes the DEFVAR instruction.
+     *
+     * @param Instruction $instruction The DEFVAR instruction to execute.
+     * @return void
+     */
     private function executeDefVar(Instruction $instruction) : void
     {
         $var = $instruction->getFirstArg();
 
         $variable = new Variable(VarHelper::getVarName($var->getValue()), VarHelper::getFrameName($var->getValue()));
- 
+
         $frame = $this->frameLogic->getFrame($variable->getFrame());
         $frame->addVariable($variable);
     }
 
+    /**
+     * Executes the PUSHS instruction.
+     *
+     * @param Instruction $instruction The instruction to execute.
+     * @return void
+     */
+    private function executePushs(Instruction $instruction) : void
+    {
+        $symb = $instruction->getFirstArg();
+        $type = $symb->getType();
+
+        if ($type === "var") 
+        {
+            $frame = $this->frameLogic->getFrame(VarHelper::getFrameName($symb->getValue()));
+            $variable = $frame->getVariable(VarHelper::getVarName($symb->getValue()));
+
+            $this->dataStack->push(new Constant($variable->getType(), $variable->getValue()));
+        }
+        else 
+        {
+            $this->dataStack->push(new Constant($symb->getType(), $symb->getValue()));
+        }
+    }
+
+    /**
+     * Executes the POPS instruction.
+     *
+     * @param Instruction $instruction The instruction to execute.
+     * @return void
+     */
+    private function executePops(Instruction $instruction) : void
+    {
+        $var = $instruction->getFirstArg();
+
+        $frame = $this->frameLogic->getFrame(VarHelper::getFrameName($var->getValue()));
+        $variable = $frame->getVariable(VarHelper::getVarName($var->getValue()));
+
+        $const = $this->dataStack->pop();
+        $variable->setValue($const->getValue());
+        $variable->setType($const->getType());
+    }
+
+    /**
+     * Executes the WRITE instruction.
+     *
+     * @param Instruction $instruction The instruction to execute.
+     * @return void
+     */
     private function executeWrite(Instruction $instruction) : void
     {
         $symb = $instruction->getFirstArg();
@@ -271,18 +350,33 @@ class InstructionExecutor
         }
     }
 
+    /**
+     * Executes the EXIT instruction.
+     * Exits the program with the specified exit code in range 0-9.
+     *
+     * @param Instruction $instruction The instruction to execute.
+     * @return void
+     */
     private function executeExit(Instruction $instruction) : void
     {
         $arg1 = $instruction->getFirstArg();
 
         if ($arg1->getType() === "int") 
         {
+            $exitCode = (int) $arg1->getValue();
+            if ($exitCode < 0 || $exitCode > 9) 
+                throw new OperandValueException();
+
             exit((int) $arg1->getValue());
         }
         else if ($arg1->getType() === "var") 
         {
-            $frame = $this->frameLogic->getFrame(VarHelper::getFrameName($arg1->getValue()));
             $symb = SymbolHelper::getConstant($arg1, "int", $this->frameLogic);
+            $exitCode = (int) $symb->getValue();
+
+            if ($exitCode < 0 || $exitCode > 9) 
+                throw new OperandValueException();
+
             exit((int) $symb->getValue());
         }
         else
@@ -291,6 +385,13 @@ class InstructionExecutor
         }
     }
 
+    /**
+     * Executes an arithmetic operation based on the given instruction.
+     * Implements ADD, SUB, MUL, and IDIV instructions.
+     *
+     * @param Instruction $instruction The instruction to execute.
+     * @return void
+     */
     private function executeArithmeticOp(Instruction $instruction) : void
     {
         $operation = $instruction->opcode;
@@ -320,7 +421,6 @@ class InstructionExecutor
         {
             if ($symb2->getValue() === 0) 
             {
-                // Division by zero exception
                 throw new OperandValueException();
             }
             $variable->setValue($symb1->getValue() / $symb2->getValue());
@@ -328,6 +428,14 @@ class InstructionExecutor
         $variable->setType("int");
     }
 
+    /**
+     * Executes a relation operation based on the given instruction.
+     * Implements LT, GT, and EQ instructions.
+     *
+     * @param Instruction $instruction The instruction to be executed.
+     * @throws OperandTypeException If the operand types are invalid for the operation.
+     * @return void
+     */
     private function executeRelationOp(Instruction $instruction) : void
     {
         $operation = $instruction->opcode;
@@ -381,6 +489,12 @@ class InstructionExecutor
         $variable->setType("bool");
     }
 
+    /**
+     * Executes the AND or OR operation based on the given instruction.
+     *
+     * @param Instruction $instruction The instruction to be executed.
+     * @return void
+     */
     private function executeAndOr(Instruction $instruction) : void
     {
         $operation = $instruction->opcode;
@@ -406,6 +520,12 @@ class InstructionExecutor
         $variable->setType("bool");
     }
 
+    /**
+     * Executes the NOT operation based on the given instruction.
+     *
+     * @param Instruction $instruction The instruction to be executed.
+     * @return void
+     */
     private function executeNot(Instruction $instruction) : void
     {
         $arg1 = $instruction->getFirstArg();
@@ -420,6 +540,12 @@ class InstructionExecutor
         $variable->setType("bool");
     }
 
+    /**
+     * Executes the CONCAT instruction.
+     *
+     * @param Instruction $instruction The instruction to be executed.
+     * @return void
+     */
     private function executeConcat(Instruction $instruction) : void
     {
         $arg1 = $instruction->getFirstArg();
@@ -436,6 +562,12 @@ class InstructionExecutor
         $variable->setType("string");
     }
 
+    /**
+     * Executes the STRLEN instruction.
+     *
+     * @param Instruction $instruction The instruction to be executed.
+     * @return void
+     */
     private function executeStrLen(Instruction $instruction) : void
     {
         $arg1 = $instruction->getFirstArg();
@@ -450,6 +582,12 @@ class InstructionExecutor
         $variable->setType("int");
     }
 
+    /**
+     * Executes the GETCHAR instruction.
+     *
+     * @param Instruction $instruction The instruction to be executed.
+     * @return void
+     */
     private function executeGetChar(Instruction $instruction) : void
     {
         $arg1 = $instruction->getFirstArg();
@@ -474,6 +612,12 @@ class InstructionExecutor
         $variable->setType("string");
     }
 
+    /**
+     * Executes the SETCHAR instruction.
+     *
+     * @param Instruction $instruction The instruction to be executed.
+     * @return void
+     */
     private function executeSetChar(Instruction $instruction) : void
     {
         $arg1 = $instruction->getFirstArg();
@@ -505,6 +649,12 @@ class InstructionExecutor
         $variable->setType("string");
     }
 
+    /**
+     * Executes the TYPE instruction.
+     *
+     * @param Instruction $instruction The instruction to be executed.
+     * @return void
+     */
     private function executeType(Instruction $instruction) : void
     {
         $arg1 = $instruction->getFirstArg();
@@ -526,6 +676,12 @@ class InstructionExecutor
         $variable->setType("string");
     }
 
+    /**
+     * Executes the INT2CHAR instruction.
+     *
+     * @param Instruction $instruction The instruction to be executed.
+     * @return void
+     */
     private function executeInt2Char(Instruction $instruction) : void
     {
         $arg1 = $instruction->getFirstArg();
@@ -545,6 +701,12 @@ class InstructionExecutor
         $variable->setType("string");
     }
 
+    /**
+     * Executes the STRI2INT instruction.
+     *
+     * @param Instruction $instruction The instruction to be executed.
+     * @return void
+     */
     private function executeStri2Int(Instruction $instruction) : void
     {
         $arg1 = $instruction->getFirstArg();
@@ -569,6 +731,12 @@ class InstructionExecutor
         $variable->setType("int");
     }
 
+    /**
+     * Executes the READ instruction.
+     *
+     * @param Instruction $instruction The instruction to be executed.
+     * @return void
+     */
     private function executeRead(Instruction $instruction) : void
     {
         $arg1 = $instruction->getFirstArg();

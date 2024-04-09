@@ -13,6 +13,6 @@ class StringOperationException extends IPPException
 {
     public function __construct(string $message = "String operation error")
     {
-        parent::__construct($message, ReturnCode::STRING_OPERATION_ERROR, null);
+        parent::__construct($message, ReturnCode::STRING_OPERATION_ERROR);
     }
 }
