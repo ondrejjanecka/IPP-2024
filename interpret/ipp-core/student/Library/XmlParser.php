@@ -128,11 +128,16 @@ class XmlParser
 
         foreach ($instructionNodes as $instruction)
         {
+            $labels = [];
             $order = (int)$instruction->getAttribute("order");
             
-            if (in_array($order, $orders) || $order < 0) 
+            if (in_array($order, $orders)) 
             {
                 throw new InvalidSourceStructureException("Duplicate order of instruction");
+            }
+            else if ($order < 1) 
+            {
+                throw new InvalidSourceStructureException("Invalid order of instruction");
             }
             $orders[] = $order;
 
@@ -147,8 +152,15 @@ class XmlParser
                     {
                         $label = (string)$arg->nodeName;
                         $type = (string)$arg->getAttribute("type");
+
+                        if (in_array($label, $labels) || ($label !== "arg1" && $label !== "arg2" && $label !== "arg3"))
+                        {
+                            throw new InvalidSourceStructureException("Duplicate argument label '$label'");
+                        }
+
                         $value = trim((string)$arg->nodeValue);
                         $args[$label] = new Argument($type, $value);
+                        $labels[] = $label;
                     }
                 }
             }

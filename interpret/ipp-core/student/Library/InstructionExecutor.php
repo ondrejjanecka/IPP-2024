@@ -14,10 +14,12 @@ use IPP\Student\Library\Frame;
 use IPP\Student\Helpers\EscapeSequenceConvertor as StringConvertor;
 use IPP\Student\Helpers\SymbolHelper;
 use IPP\Student\Library\Instruction;
+use IPP\Student\Library\FrameLogic;
 
 use IPP\Student\Exceptions\OperandTypeException;
 use IPP\Student\Exceptions\OperandValueException;
 use IPP\Student\Exceptions\StringOperationException;
+use IPP\Student\Exceptions\FrameAccessException;
 
 use IPP\Core\Interface\InputReader;
 use IPP\Core\Interface\OutputWriter;
@@ -33,8 +35,10 @@ class InstructionExecutor
 
     private Frame $globalFrame;
 
+    private FrameLogic $frameLogic; 
     // private $localFrame;
     // private $tempFrame;
+    // private Stack $frameStack;
     
     private InputReader $input;
     private OutputWriter $stdout;
@@ -50,8 +54,7 @@ class InstructionExecutor
     {
         $this->instructions = $instructions;
         $this->globalFrame = new Frame();
-        // $this->localFrame = new Frame();
-        // $this->tempFrame = new Frame();
+        $this->frameLogic = new FrameLogic();
         $this->input = $input;
         $this->stdout = $stdout;
         // $this->stderr = $stderr;
@@ -72,15 +75,15 @@ class InstructionExecutor
             case "MOVE":
                 $this->executeMove($instruction);
                 break;
-            // case "CREATEFRAME":
-            //     $this->executeCreateFrame($instruction);
-            //     break;
-            // case "PUSHFRAME":
-            //     $this->executePushFrame($instruction);
-            //     break;
-            // case "POPFRAME":
-            //     $this->executePopFrame($instruction);
-            //     break;
+            case "CREATEFRAME":
+                $this->executeCreateFrame();
+                break;
+            case "PUSHFRAME":
+                $this->executePushFrame();
+                break;
+            case "POPFRAME":
+                $this->executePopFrame();
+                break;
             case "DEFVAR":
                 $this->executeDefVar($instruction);
                 break;
@@ -177,27 +180,42 @@ class InstructionExecutor
         }
     }
 
+    private function executeCreateFrame() : void
+    {
+        $this->frameLogic->createFrame();
+    }
+
+    private function executePushFrame() : void
+    {
+        $this->frameLogic->pushTempFrame();
+    }
+
+    private function executePopFrame() : void
+    {
+        $this->frameLogic->popFrame();
+    }
+
     private function executeMove(Instruction $instruction) : void
     {
         $arg1 = $instruction->getFirstArg();
         $arg2 = $instruction->getSecondArg();
 
-        $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
+        $frame1 = $this->frameLogic->getFrame(VarHelper::getFrameName($arg1->getValue()));
+
+        $variable = $frame1->getVariable(VarHelper::getVarName($arg1->getValue()));
 
         if ($arg2->getType() === "var") 
         {
-            $symb = $this->globalFrame->getVariable(VarHelper::getVarName($arg2->getValue()));
+            $frame2 = $this->frameLogic->getFrame(VarHelper::getFrameName($arg2->getValue()));
+            $symb = $frame2->getVariable(VarHelper::getVarName($arg2->getValue()));
         }
         else 
         {
             $symb = new Constant($arg2->getType(), $arg2->getValue());
         }
         
-        if ($variable->getFrame() === "GF") 
-        {
-            $variable->setValue($symb->getValue());
-            $variable->setType($symb->getType());
-        }
+        $variable->setValue($symb->getValue());
+        $variable->setType($symb->getType());
     }
 
     private function executeDefVar(Instruction $instruction) : void
@@ -206,10 +224,8 @@ class InstructionExecutor
 
         $variable = new Variable(VarHelper::getVarName($var->getValue()), VarHelper::getFrameName($var->getValue()));
  
-        if ($variable->getFrame() === "GF") 
-        {
-            $this->globalFrame->addVariable($variable); 
-        }
+        $frame = $this->frameLogic->getFrame($variable->getFrame());
+        $frame->addVariable($variable);
     }
 
     private function executeWrite(Instruction $instruction) : void
@@ -220,25 +236,22 @@ class InstructionExecutor
         if ($type === "var") 
         {
             $name = VarHelper::getVarName($symb->getValue());
-            $frame = VarHelper::getFrameName($symb->getValue());
+            $frame = $this->frameLogic->getFrame(VarHelper::getFrameName($symb->getValue()));
 
-            if ($frame === "GF") 
+            $variable = $frame->getVariable($name);
+
+            if ($variable->getType() === "nil") 
             {
-                $variable = $this->globalFrame->getVariable($name);
-
-                if ($variable->getType() === "nil") 
-                {
-                    $this->stdout->writeString("");
-                    return;
-                }
-                else if ($variable->getType() === "bool")
-                {
-                    $this->stdout->writeString($variable->getValue() ? "true" : "false");
-                    return;
-                }
-                else 
-                    $this->stdout->writeString(StringConvertor::convert($variable->getValue()));
+                $this->stdout->writeString("");
+                return;
             }
+            else if ($variable->getType() === "bool")
+            {
+                $this->stdout->writeString($variable->getValue() ? "true" : "false");
+                return;
+            }
+            else 
+                $this->stdout->writeString(StringConvertor::convert($variable->getValue()));
         }
         else if ($type === "int" || $type === "string") 
         {
@@ -262,9 +275,20 @@ class InstructionExecutor
     {
         $arg1 = $instruction->getFirstArg();
 
-        $symb = SymbolHelper::getConstant($arg1, "int", $this->globalFrame);
-        
-        exit((int) $symb->getValue());
+        if ($arg1->getType() === "int") 
+        {
+            exit((int) $arg1->getValue());
+        }
+        else if ($arg1->getType() === "var") 
+        {
+            $frame = $this->frameLogic->getFrame(VarHelper::getFrameName($arg1->getValue()));
+            $symb = SymbolHelper::getConstant($arg1, "int", $this->frameLogic);
+            exit((int) $symb->getValue());
+        }
+        else
+        {
+            throw new OperandTypeException();
+        }
     }
 
     private function executeArithmeticOp(Instruction $instruction) : void
@@ -274,10 +298,11 @@ class InstructionExecutor
         $arg2 = $instruction->getSecondArg();
         $arg3 = $instruction->getThirdArg();
 
-        $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
+        $frame = $this->frameLogic->getFrame(VarHelper::getFrameName($arg1->getValue()));
+        $variable = $frame->getVariable(VarHelper::getVarName($arg1->getValue()));
 
-        $symb1 = SymbolHelper::getConstant($arg2, "int", $this->globalFrame);
-        $symb2 = SymbolHelper::getConstant($arg3, "int", $this->globalFrame);
+        $symb1 = SymbolHelper::getConstant($arg2, "int", $this->frameLogic);
+        $symb2 = SymbolHelper::getConstant($arg3, "int", $this->frameLogic);
 
         if ($operation === "ADD") 
         {
@@ -310,10 +335,11 @@ class InstructionExecutor
         $arg2 = $instruction->getSecondArg();
         $arg3 = $instruction->getThirdArg();
 
-        $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
+        $frame = $this->frameLogic->getFrame(VarHelper::getFrameName($arg1->getValue()));
+        $variable = $frame->getVariable(VarHelper::getVarName($arg1->getValue()));
 
-        $symb1 = SymbolHelper::getConstantAndType($arg2, $this->globalFrame);
-        $symb2 = SymbolHelper::getConstantAndType($arg3, $this->globalFrame);
+        $symb1 = SymbolHelper::getConstantAndType($arg2, $this->frameLogic);
+        $symb2 = SymbolHelper::getConstantAndType($arg3, $this->frameLogic);
 
         if ($symb1->getType() !== $symb2->getType() && $symb1->getType() !== "nil")
         {
@@ -362,10 +388,11 @@ class InstructionExecutor
         $arg2 = $instruction->getSecondArg();
         $arg3 = $instruction->getThirdArg();
 
-        $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
+        $frame = $this->frameLogic->getFrame(VarHelper::getFrameName($arg1->getValue()));
+        $variable = $frame->getVariable(VarHelper::getVarName($arg1->getValue()));
 
-        $symb1 = SymbolHelper::getConstant($arg2, "bool", $this->globalFrame);
-        $symb2 = SymbolHelper::getConstant($arg3, "bool", $this->globalFrame);
+        $symb1 = SymbolHelper::getConstant($arg2, "bool", $this->frameLogic);
+        $symb2 = SymbolHelper::getConstant($arg3, "bool", $this->frameLogic);
 
         if ($operation === "AND") 
         {
@@ -384,9 +411,10 @@ class InstructionExecutor
         $arg1 = $instruction->getFirstArg();
         $arg2 = $instruction->getSecondArg();
 
-        $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
+        $frame = $this->frameLogic->getFrame(VarHelper::getFrameName($arg1->getValue()));
+        $variable = $frame->getVariable(VarHelper::getVarName($arg1->getValue()));
 
-        $symb = SymbolHelper::getConstant($arg2, "bool", $this->globalFrame);
+        $symb = SymbolHelper::getConstant($arg2, "bool", $this->frameLogic);
 
         $variable->setValue(!$symb->getValue());
         $variable->setType("bool");
@@ -398,10 +426,11 @@ class InstructionExecutor
         $arg2 = $instruction->getSecondArg();
         $arg3 = $instruction->getThirdArg();
 
-        $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
+        $frame = $this->frameLogic->getFrame(VarHelper::getFrameName($arg1->getValue()));
+        $variable = $frame->getVariable(VarHelper::getVarName($arg1->getValue()));
 
-        $symb1 = SymbolHelper::getConstant($arg2, "string", $this->globalFrame);
-        $symb2 = SymbolHelper::getConstant($arg3, "string", $this->globalFrame);
+        $symb1 = SymbolHelper::getConstant($arg2, "string", $this->frameLogic);
+        $symb2 = SymbolHelper::getConstant($arg3, "string", $this->frameLogic);
 
         $variable->setValue($symb1->getValue() . $symb2->getValue());
         $variable->setType("string");
@@ -412,9 +441,10 @@ class InstructionExecutor
         $arg1 = $instruction->getFirstArg();
         $arg2 = $instruction->getSecondArg();
 
-        $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
+        $frame = $this->frameLogic->getFrame(VarHelper::getFrameName($arg1->getValue()));
+        $variable = $frame->getVariable(VarHelper::getVarName($arg1->getValue()));
 
-        $symb = SymbolHelper::getConstant($arg2, "string", $this->globalFrame);
+        $symb = SymbolHelper::getConstant($arg2, "string", $this->frameLogic);
 
         $variable->setValue(strlen($symb->getValue()));
         $variable->setType("int");
@@ -426,10 +456,11 @@ class InstructionExecutor
         $arg2 = $instruction->getSecondArg();
         $arg3 = $instruction->getThirdArg();
 
-        $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
+        $frame = $this->frameLogic->getFrame(VarHelper::getFrameName($arg1->getValue()));
+        $variable = $frame->getVariable(VarHelper::getVarName($arg1->getValue()));
 
-        $symb1 = SymbolHelper::getConstant($arg2, "string", $this->globalFrame);
-        $symb2 = SymbolHelper::getConstant($arg3, "int", $this->globalFrame);
+        $symb1 = SymbolHelper::getConstant($arg2, "string", $this->frameLogic);
+        $symb2 = SymbolHelper::getConstant($arg3, "int", $this->frameLogic);
 
         $string = $symb1->getValue();
         $index = $symb2->getValue();
@@ -449,12 +480,13 @@ class InstructionExecutor
         $arg2 = $instruction->getSecondArg();
         $arg3 = $instruction->getThirdArg();
 
-        $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
+        $frame = $this->frameLogic->getFrame(VarHelper::getFrameName($arg1->getValue()));
+        $variable = $frame->getVariable(VarHelper::getVarName($arg1->getValue()));
         if ($variable->getType() !== "string") 
             throw new OperandTypeException();
 
-        $symb1 = SymbolHelper::getConstant($arg2, "int", $this->globalFrame);      
-        $symb2 = SymbolHelper::getConstant($arg3, "string", $this->globalFrame);
+        $symb1 = SymbolHelper::getConstant($arg2, "int", $this->frameLogic);      
+        $symb2 = SymbolHelper::getConstant($arg3, "string", $this->frameLogic);
 
         $string = $variable->getValue();
         $index = $symb1->getValue();
@@ -478,10 +510,11 @@ class InstructionExecutor
         $arg1 = $instruction->getFirstArg();
         $arg2 = $instruction->getSecondArg();
 
-        $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
+        $frame = $this->frameLogic->getFrame(VarHelper::getFrameName($arg1->getValue()));
+        $variable = $frame->getVariable(VarHelper::getVarName($arg1->getValue()));
         try
         {
-            $symb = SymbolHelper::getConstantAndType($arg2, $this->globalFrame);
+            $symb = SymbolHelper::getConstantAndType($arg2, $this->frameLogic);
             $variable->setValue($symb->getType());
         }
         catch (ValueException $e)
@@ -498,13 +531,14 @@ class InstructionExecutor
         $arg1 = $instruction->getFirstArg();
         $arg2 = $instruction->getSecondArg();
 
-        $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
+        $frame = $this->frameLogic->getFrame(VarHelper::getFrameName($arg1->getValue()));
+        $variable = $frame->getVariable(VarHelper::getVarName($arg1->getValue()));
 
-        $symb = SymbolHelper::getConstant($arg2, "int", $this->globalFrame);
+        $symb = SymbolHelper::getConstant($arg2, "int", $this->frameLogic);
 
         if ($symb->getValue() < 0 || $symb->getValue() > 1114112) 
         {
-            throw new OperandValueException();
+            throw new StringOperationException();
         }
 
         $variable->setValue(chr($symb->getValue()));
@@ -517,10 +551,11 @@ class InstructionExecutor
         $arg2 = $instruction->getSecondArg();
         $arg3 = $instruction->getThirdArg();
 
-        $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
+        $frame = $this->frameLogic->getFrame(VarHelper::getFrameName($arg1->getValue()));
+        $variable = $frame->getVariable(VarHelper::getVarName($arg1->getValue()));
 
-        $symb1 = SymbolHelper::getConstant($arg2, "string", $this->globalFrame);
-        $symb2 = SymbolHelper::getConstant($arg3, "int", $this->globalFrame);
+        $symb1 = SymbolHelper::getConstant($arg2, "string", $this->frameLogic);
+        $symb2 = SymbolHelper::getConstant($arg3, "int", $this->frameLogic);
 
         $string = $symb1->getValue();
         $index = $symb2->getValue();
@@ -539,7 +574,8 @@ class InstructionExecutor
         $arg1 = $instruction->getFirstArg();
         $arg2 = $instruction->getSecondArg();
 
-        $variable = $this->globalFrame->getVariable(VarHelper::getVarName($arg1->getValue()));
+        $frame = $this->frameLogic->getFrame(VarHelper::getFrameName($arg1->getValue()));
+        $variable = $frame->getVariable(VarHelper::getVarName($arg1->getValue()));
 
         $type = $arg2->getValue();
 

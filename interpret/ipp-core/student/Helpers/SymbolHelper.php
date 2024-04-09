@@ -11,6 +11,7 @@ use IPP\Student\Library\Argument;
 use IPP\Student\Helpers\VarHelper;
 use IPP\Student\Library\Frame;
 use IPP\Student\Exceptions\OperandTypeException;
+use IPP\Student\Library\FrameLogic;
 
 /**
  * Class SymbolHelper
@@ -28,10 +29,11 @@ class SymbolHelper
      * @return Constant The constant value.
      * @throws OperandTypeException If the argument type does not match the requested type.
      */
-    public static function getConstant(Argument $arg, string $requestedType, Frame $frame)
+    public static function getConstant(Argument $arg, string $requestedType, FrameLogic $frameLogic)
     {
         if ($arg->getType() === "var")
         {
+            $frame = $frameLogic->getFrame(VarHelper::getFrameName($arg->getValue()));
             $variable = $frame->getVariable(VarHelper::getVarName($arg->getValue()));
             
             if ($variable->getType() === $requestedType)
@@ -56,10 +58,11 @@ class SymbolHelper
      * @param Frame $frame The frame object.
      * @return Constant The constant object containing the type and value.
      */
-    public static function getConstantAndType(Argument $arg, Frame $frame)
+    public static function getConstantAndType(Argument $arg, FrameLogic $frameLogic)
     {
         if ($arg->getType() === "var")
         {
+            $frame = $frameLogic->getFrame(VarHelper::getFrameName($arg->getValue()));
             $variable = $frame->getVariable(VarHelper::getVarName($arg->getValue()));
             return new Constant($variable->getType(), $variable->getValue());
         }
