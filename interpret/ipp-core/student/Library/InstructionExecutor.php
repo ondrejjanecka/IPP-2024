@@ -21,6 +21,7 @@ use IPP\Student\Exceptions\StringOperationException;
 
 use IPP\Core\Interface\InputReader;
 use IPP\Core\Interface\OutputWriter;
+use IPP\Student\Exceptions\InvalidSourceStructureException;
 use IPP\Student\Exceptions\ValueException;
 
 class InstructionExecutor
@@ -314,7 +315,7 @@ class InstructionExecutor
         $symb1 = SymbolHelper::getConstantAndType($arg2, $this->globalFrame);
         $symb2 = SymbolHelper::getConstantAndType($arg3, $this->globalFrame);
 
-        if ($symb1->getType() !== $symb2->getType()) 
+        if ($symb1->getType() !== $symb2->getType() && $symb1->getType() !== "nil")
         {
             throw new OperandTypeException();
         }
@@ -486,6 +487,8 @@ class InstructionExecutor
         catch (ValueException $e)
         {
             $variable->setValue("nil");
+            $variable->setType("nil");
+            return;
         }
         $variable->setType("string");
     }
@@ -540,38 +543,51 @@ class InstructionExecutor
 
         $type = $arg2->getValue();
 
-        $input = $this->input->readString();
-
-        if ($input === null || ($type !== "int" && $type !== "bool" && $type !== "string")) 
+        if ($type === "bool")
         {
-            $variable->setValue("nil");
-            $variable->setType("nil");
-            return;
-        }
+            $input = $this->input->readBool();
 
-        if ($type === "int") 
-        {
-            if (is_numeric($input)) 
+            if ($input === null) 
             {
-                $variable->setValue((int) $input);
-                $variable->setType("int");
-            }
-            else
-            {
-                // Possible problems
                 $variable->setValue("nil");
                 $variable->setType("nil");
+                return;
             }
+
+            $variable->setValue($input);
+            $variable->setType("bool");
         }
-        else if ($type === "bool") 
+        else if ($type === "int")
         {
-            $variable->setValue(filter_var($input, FILTER_VALIDATE_BOOLEAN));
-            $variable->setType("bool");            
+            $input = $this->input->readInt();
+
+            if ($input === null) 
+            {
+                $variable->setValue("nil");
+                $variable->setType("nil");
+                return;
+            }
+
+            $variable->setValue($input);
+            $variable->setType("int");
         }
-        else if ($type === "string") 
+        else if ($type === "string")
         {
+            $input = $this->input->readString();
+
+            if ($input === null) 
+            {
+                $variable->setValue("nil");
+                $variable->setType("nil");
+                return;
+            }
+
             $variable->setValue($input);
             $variable->setType("string");
+        }
+        else
+        {
+            throw new InvalidSourceStructureException();
         }
     }
 }

@@ -22,10 +22,11 @@ class EscapeSequenceConvertor
     public static function convert($string): string
     {
         $string = str_replace('\032', " ", $string);
-        $string = preg_replace_callback('/\\\\([0-9]{3})/', function($matches) {
-            $char = chr((int) octdec($matches[1]));
-            return $char;
-        }, $string);
+        $string = str_replace('\010', "\n", $string);
+        // $string = preg_replace_callback('/\\\\([0-9]{3})/', function($matches) {
+        //     $char = chr((int) octdec($matches[1]));
+        //     return $char;
+        // }, $string);
     
         return $string;
     }

@@ -6,12 +6,12 @@
 
 namespace IPP\Student\Library;
 
-use IPP\Student\Library\CustomError as ErrorExit;
-use IPP\Core\ReturnCode;
 use IPP\Student\Library\Instruction;
 use IPP\Student\Library\Argument;
 use IPP\Student\Helpers\OpcodeHelper;
 use DOMDocument;
+use DOMElement;
+use IPP\Student\Exceptions\InvalidSourceStructureException;
 
 class XmlParser
 {
@@ -31,8 +31,9 @@ class XmlParser
 
     private function checkIntegrity() : void
     {
-            $rootElement = $this->XmlPath->documentElement;
-
+        $rootElement = $this->XmlPath->documentElement;
+        if (!$rootElement instanceof DOMElement)
+            throw new InvalidSourceStructureException("Invalid argument structure");
         // try
         // {
         //     $rootElement = $this->XmlPath->documentElement;
@@ -44,20 +45,23 @@ class XmlParser
     
         if ($rootElement->nodeName != "program")
         {
-            ErrorExit::printErrorExit("Root element must be 'program'", ReturnCode::INVALID_SOURCE_STRUCTURE);
+            throw new InvalidSourceStructureException("Root element must be 'program'");
         }
     }
 
     private function checkRoot() : void
     {
         $rootElement = $this->XmlPath->documentElement;
+        if (!$rootElement instanceof DOMElement)
+            throw new InvalidSourceStructureException("Invalid argument structure");
+        
         if ($rootElement->nodeName != "program")
         {
-            ErrorExit::printErrorExit("Root element must be 'program'", ReturnCode::INVALID_SOURCE_STRUCTURE);
+            throw new InvalidSourceStructureException("Root element must be 'program'");
         }
         if ($rootElement->getAttribute("language") != "IPPcode24")
         {
-            ErrorExit::printErrorExit("Root element must have attribute 'language' with value 'IPPcode24'", ReturnCode::INVALID_SOURCE_STRUCTURE);
+            throw new InvalidSourceStructureException("Root element must have attribute 'language' with value 'IPPcode24'");
         }
         
         // TODO - zkontrolovat výskyt dalších atributů
@@ -65,7 +69,11 @@ class XmlParser
 
     private function checkInstructions() : void
     {
-        $instructions = $this->XmlPath->documentElement->childNodes;
+        $rootElement = $this->XmlPath->documentElement;
+        if (!$rootElement instanceof DOMElement)
+            throw new InvalidSourceStructureException("Invalid argument structure");
+
+        $instructions = $rootElement->childNodes;
         foreach ($instructions as $instruction)
         {
             if ($instruction->nodeType != XML_ELEMENT_NODE)
@@ -74,32 +82,35 @@ class XmlParser
             }
             if ($instruction->nodeName != "instruction")
             {
-                ErrorExit::printErrorExit("Only 'instruction' elements are allowed inside 'program'", ReturnCode::INVALID_SOURCE_STRUCTURE);
+                throw new InvalidSourceStructureException("Only 'instruction' elements are allowed inside 'program'");
             }
             foreach ($instruction->attributes as $attribute) 
             {
                 $attributeName = $attribute->nodeName;
                 if ($attributeName != 'order' && $attributeName != 'opcode') 
                 {
-                    ErrorExit::printErrorExit("Instruction must not have any additional attributes besides 'order' and 'opcode'", ReturnCode::INVALID_SOURCE_STRUCTURE);
+                    throw new InvalidSourceStructureException("Instruction must not have any additional attributes besides 'order' and 'opcode'");
                 }
             }
-            if (!$instruction->hasAttribute("order"))
+            if ($instruction instanceof DOMElement)
             {
-                ErrorExit::printErrorExit("Instruction must have attribute 'order'", ReturnCode::INVALID_SOURCE_STRUCTURE);
-            }
-            if ($instruction->hasAttribute("opcode"))
-            {
-                $opcode = $instruction->getAttribute("opcode");
-                if (!OpcodeHelper::isOpcodeAllowed($opcode))
+                if (!$instruction->hasAttribute("order"))
                 {
-                    ErrorExit::printErrorExit("Invalid opcode '$opcode'", ReturnCode::INVALID_SOURCE_STRUCTURE);
+                    throw new InvalidSourceStructureException("Instruction must have attribute 'order'");
                 }
-            }
-            else
-            {
-                ErrorExit::printErrorExit("Instruction must have attribute 'opcode'", ReturnCode::INVALID_SOURCE_STRUCTURE);
-            }
+                if ($instruction->hasAttribute("opcode"))
+                {
+                    $opcode = $instruction->getAttribute("opcode");
+                    if (!OpcodeHelper::isOpcodeAllowed($opcode))
+                    {
+                        throw new InvalidSourceStructureException("Invalid opcode '$opcode'");
+                    }
+                }
+                else
+                {
+                    throw new InvalidSourceStructureException("Instruction must have attribute 'opcode'");
+                }
+            }                
         }
     }
 
@@ -119,9 +130,9 @@ class XmlParser
         {
             $order = (int)$instruction->getAttribute("order");
             
-            if (in_array($order, $orders)) 
+            if (in_array($order, $orders) || $order < 0) 
             {
-                ErrorExit::printErrorExit("Duplicate order of instruction", ReturnCode::INVALID_SOURCE_STRUCTURE);
+                throw new InvalidSourceStructureException("Duplicate order of instruction");
             }
             $orders[] = $order;
 
@@ -130,18 +141,21 @@ class XmlParser
 
             foreach ($instruction->childNodes as $arg) 
             {
-                if ($arg->nodeType == XML_ELEMENT_NODE) 
+                if ($arg instanceof DOMElement)
                 {
-                    $label = (string)$arg->nodeName;
-                    $type = (string)$arg->getAttribute("type");
-                    $value = trim((string)$arg->nodeValue);
-                    $args[$label] = new Argument($type, $value);
+                    if ($arg->nodeType == XML_ELEMENT_NODE) 
+                    {
+                        $label = (string)$arg->nodeName;
+                        $type = (string)$arg->getAttribute("type");
+                        $value = trim((string)$arg->nodeValue);
+                        $args[$label] = new Argument($type, $value);
+                    }
                 }
             }
 
             if (!OpcodeHelper::checkArgCount($opcode, count($args)))
             {
-                ErrorExit::printErrorExit("Invalid number of arguments for opcode '$opcode'", ReturnCode::INVALID_SOURCE_STRUCTURE);
+                throw new InvalidSourceStructureException("Invalid number of arguments for opcode '$opcode'");
             }
 
             $instructions[] = new Instruction($order, $opcode, $args);
