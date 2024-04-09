@@ -21,10 +21,8 @@ class EscapeSequenceConvertor
      */
     public static function convert($string): string
     {
-        $string = str_replace('\032', " ", $string);
-        $string = str_replace('\010', "\n", $string);
         $string = preg_replace_callback('/\\\\([0-9]{3})/', function($matches) {
-            $char = chr((int) $matches[1]);
+            $char = mb_chr((int) $matches[1], 'UTF-8');
             return $char;
         }, $string);    
         return $string;

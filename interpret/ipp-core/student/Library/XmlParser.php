@@ -153,9 +153,9 @@ class XmlParser
                         $label = (string)$arg->nodeName;
                         $type = (string)$arg->getAttribute("type");
 
-                        if (in_array($label, $labels) || ($label !== "arg1" && $label !== "arg2" && $label !== "arg3"))
+                        if (in_array($label, $labels) || ($label !== "arg1" && $label !== "arg2" && $label !== "arg3") || $type === "")
                         {
-                            throw new InvalidSourceStructureException("Duplicate argument label '$label'");
+                            throw new InvalidSourceStructureException("Invalid argument label '$label'");
                         }
 
                         $value = trim((string)$arg->nodeValue);
