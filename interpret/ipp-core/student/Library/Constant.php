@@ -5,6 +5,7 @@
  */
 
 namespace IPP\Student\Library;
+
 /**
  * Represents a constant value with a specified type.
  */

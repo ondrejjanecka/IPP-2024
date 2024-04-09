@@ -25,6 +25,7 @@ use IPP\Student\Exceptions\{
     OperandValueException,
     StringOperationException,
     InvalidSourceStructureException,
+    SemanticException,
     ValueException
 };
 
@@ -33,6 +34,11 @@ use IPP\Core\Interface\{
     OutputWriter
 };
 
+/**
+ * Class InstructionExecutor
+ *
+ * This class is responsible for executing instructions in the interpreter.
+ */
 class InstructionExecutor
 {
     /**
@@ -47,6 +53,13 @@ class InstructionExecutor
     private OutputWriter $stdout;
 
     /**
+     * @var array<int> Holds the indexes of defined labels.
+     */
+    private array $labels;
+    private int $instructionIndex;
+    private Stack $callStack;
+
+    /**
      * @param array<Instruction> $instructions
      * @param InputReader $input
      * @param OutputWriter $stdout
@@ -58,13 +71,55 @@ class InstructionExecutor
         $this->dataStack = new DataStack();
         $this->input = $input;
         $this->stdout = $stdout;
+        $this->labels = [];
+        $this->instructionIndex = 1;
+        $this->callStack = new Stack();
     }
 
+    /**
+     * Executes the instructions stored in the InstructionExecutor object.
+     *
+     * This method iterates over the instructions array and executes each instruction
+     * using the executeInstruction() method. It starts from the current instruction index
+     * and continues until the end of the instructions array.
+     *
+     * @return void
+     */
     public function executeInstructions() : void
     {
-        foreach ($this->instructions as $instruction) 
+        $this->defineLabels();
+        
+        while ($this->instructionIndex <= count($this->instructions)) 
         {
+            $instruction = $this->instructions[$this->instructionIndex-1];
             $this->executeInstruction($instruction);
+        }
+    }
+
+    /**
+     * Defines labels in the instructions array.
+     *
+     * This method iterates over the instructions array and checks for instructions with the opcode "LABEL".
+     * For each "LABEL" instruction found, it extracts the label name and stores the index of the instruction in the labels array.
+     * If a duplicate label is found, a SemanticException is thrown.
+     *
+     * @throws SemanticException if a duplicate label is found.
+     * @return void
+     */
+    private function defineLabels() : void
+    {
+        foreach ($this->instructions as $index => $instruction) 
+        {
+            if ($instruction->opcode === "LABEL") 
+            {
+                $labelName = $instruction->getFirstArg()->getValue();
+                
+                if (isset($this->labels[$labelName])) {
+                    throw new SemanticException("Duplicate label found: $labelName");
+                }
+
+                $this->labels[$labelName] = $index;
+            }
         }
     }
 
@@ -87,12 +142,12 @@ class InstructionExecutor
             case "DEFVAR":
                 $this->executeDefVar($instruction);
                 break;
-            // case "CALL":
-            //     $this->executeCall($instruction);
-            //     break;
-            // case "RETURN":
-            //     $this->executeReturn($instruction);
-            //     break;
+            case "CALL":
+                $this->executeCall($instruction);
+                break;
+            case "RETURN":
+                $this->executeReturn($instruction);
+                break;
             case "PUSHS":
                 $this->executePushs($instruction);
                 break;
@@ -156,18 +211,15 @@ class InstructionExecutor
             case "TYPE":
                 $this->executeType($instruction);
                 break;
-            // case "LABEL":
-            //     $this->executeLabel($instruction);
-            //     break;
-            // case "JUMP":
-            //     $this->executeJump($instruction);
-            //     break;
-            // case "JUMPIFEQ":
-            //     $this->executeJumpIfEq($instruction);
-            //     break;
-            // case "JUMPIFNEQ":
-            //     $this->executeJumpIfNEq($instruction);
-            //     break;
+            case "JUMP":
+                $this->executeJump($instruction);
+                break;
+            case "JUMPIFEQ":
+                $this->executeJumpIf($instruction);
+                break;
+            case "JUMPIFNEQ":
+                $this->executeJumpIf($instruction);
+                break;
             case "EXIT":
                 $this->executeExit($instruction);
                 break;
@@ -178,6 +230,8 @@ class InstructionExecutor
             default:
                 break;
         }
+
+        $this->instructionIndex++;
     }
 
     /**
@@ -211,6 +265,7 @@ class InstructionExecutor
 
     /**
      * Executes the CREATEFRAME instruction.
+     * 
      * Creates a new temporary frame in the frame stack.
      *
      * @return void
@@ -222,6 +277,7 @@ class InstructionExecutor
 
     /**
      * Executes the PUSHFRAME instruction.
+     * 
      * Pushes the temporary frame onto the frame stack. 
      * Makes the temporary frame the local frame.
      *
@@ -234,6 +290,7 @@ class InstructionExecutor
 
     /**
      * Executes the POPFRAME instruction.
+     * 
      * Pops the top frame from the frame stack to the temporary frame.
      *
      * @return void
@@ -352,6 +409,7 @@ class InstructionExecutor
 
     /**
      * Executes the EXIT instruction.
+     * 
      * Exits the program with the specified exit code in range 0-9.
      *
      * @param Instruction $instruction The instruction to execute.
@@ -387,6 +445,7 @@ class InstructionExecutor
 
     /**
      * Executes an arithmetic operation based on the given instruction.
+     * 
      * Implements ADD, SUB, MUL, and IDIV instructions.
      *
      * @param Instruction $instruction The instruction to execute.
@@ -430,6 +489,7 @@ class InstructionExecutor
 
     /**
      * Executes a relation operation based on the given instruction.
+     * 
      * Implements LT, GT, and EQ instructions.
      *
      * @param Instruction $instruction The instruction to be executed.
@@ -793,5 +853,104 @@ class InstructionExecutor
         {
             throw new InvalidSourceStructureException();
         }
+    }
+
+    /**
+     * Executes the JUMP instruction.
+     *
+     * This method retrieves the label from the instruction's first argument and checks if it exists in the labels array.
+     * If the label is not found, a SemanticException is thrown.
+     * If the label is found, the instruction index is updated to the corresponding label index.
+     *
+     * @param Instruction $instruction The jump instruction to execute.
+     * @throws SemanticException If the label specified in the instruction is not found.
+     * @return void
+     */
+    private function executeJump(Instruction $instruction) : void
+    {
+        $arg1 = $instruction->getFirstArg();
+        $label = $arg1->getValue();
+
+        if (!isset($this->labels[$label])) 
+        {
+            throw new SemanticException("Label not found: $label");
+        }
+
+        $this->instructionIndex = $this->labels[$label];
+    }
+
+    /**
+     * Executes the JUMPIFEQ or JUMPIFNEQ instruction.
+     *
+     * @param Instruction $instruction The instruction to be executed.
+     * @throws OperandTypeException If the operand types are not compatible.
+     * @return void
+     */
+    private function executeJumpIf(Instruction $instruction) : void
+    {
+        $arg1 = $instruction->getFirstArg();
+        $arg2 = $instruction->getSecondArg();
+        $arg3 = $instruction->getThirdArg();
+        $label = $arg1->getValue();
+
+        $symb1 = SymbolHelper::getConstantAndType($arg2, $this->frameLogic);      
+        $symb2 = SymbolHelper::getConstantAndType($arg3, $this->frameLogic);
+
+        if (($symb1->getType() === $symb2->getType()) || $symb1->getType() === "nil" || $symb2->getType() === "nil")
+        {
+            if ($instruction->opcode === "JUMPIFEQ") 
+            {
+                if ($symb1->getValue() === $symb2->getValue()) 
+                {
+                    $this->instructionIndex = $this->labels[$label];
+                }
+            }
+            else if ($instruction->opcode === "JUMPIFNEQ") 
+            {
+                if ($symb1->getValue() !== $symb2->getValue()) 
+                {
+                    $this->instructionIndex = $this->labels[$label];
+                }
+            }
+        }
+        else
+        {
+            throw new OperandTypeException();
+        }
+    }
+
+    /**
+     * Executes a call instruction.
+     *
+     * @param Instruction $instruction The call instruction to execute.
+     * @throws SemanticException If the label specified in the instruction is not found.
+     */
+    private function executeCall(Instruction $instruction) : void
+    {
+        $arg1 = $instruction->getFirstArg();
+        $label = $arg1->getValue();
+
+        if (!isset($this->labels[$label])) 
+        {
+            throw new SemanticException("Label not found: $label");
+        }
+
+        $this->callStack->push($this->instructionIndex);
+        $this->instructionIndex = $this->labels[$label];
+    }
+
+    /**
+     * Executes a return instruction.
+     *
+     * @param Instruction $instruction The return instruction to execute.
+     * @throws ValueException If the return is called without a call.
+     */
+    private function executeReturn(Instruction $instruction) : void
+    {
+        $index = $this->callStack->pop();
+        if ($index === null) 
+            throw new ValueException("Return called without a call");
+
+        $this->instructionIndex = $index;
     }
 }

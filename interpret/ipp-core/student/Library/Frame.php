@@ -20,7 +20,6 @@ class Frame
      */
     private $variables = [];
 
-
     /**
      * Adds a variable to the frame.
      *

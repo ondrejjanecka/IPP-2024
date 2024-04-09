@@ -9,7 +9,6 @@ namespace IPP\Student\Helpers;
 use IPP\Student\Library\Constant;
 use IPP\Student\Library\Argument;
 use IPP\Student\Helpers\VarHelper;
-use IPP\Student\Library\Frame;
 use IPP\Student\Exceptions\OperandTypeException;
 use IPP\Student\Library\FrameLogic;
 
