@@ -25,6 +25,9 @@ class VarHelper
         
         $name = substr($var, $pos + 1);
 
+        if ($name == null)
+            throw new InvalidXmlException("Invalid XML format");
+
         return $name;
     }
 

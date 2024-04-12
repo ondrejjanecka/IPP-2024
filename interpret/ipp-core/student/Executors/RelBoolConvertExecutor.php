@@ -106,7 +106,7 @@ class RelBoolConvertExecutor implements Executor
         $variable = $frame->getVariable(VarHelper::getVarName($arg1->getValue()));
 
         $symb1 = SymbolHelper::getConstantAndType($arg2, $this->memory->frameLogic);
-        $symb2 = SymbolHelper::getConstantAndType($arg3, $this->memory->frameLogic);
+        $symb2 = SymbolHelper::getConstantAndType($arg3, $this->memory->frameLogic); //tady
 
         if ($symb1->getType() !== $symb2->getType() && $symb1->getType() !== "nil")
         {

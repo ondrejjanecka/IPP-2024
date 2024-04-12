@@ -34,14 +34,6 @@ class XmlParser
         $rootElement = $this->XmlPath->documentElement;
         if (!$rootElement instanceof DOMElement)
             throw new InvalidSourceStructureException("Invalid argument structure");
-        // try
-        // {
-        //     $rootElement = $this->XmlPath->documentElement;
-        // }
-        // catch(\Exception $e)
-        // {
-        //     ErrorExit::printErrorExit($e->getMessage(), ReturnCode::INPUT_FILE_ERROR);
-        // }
     
         if ($rootElement->nodeName != "program")
         {
@@ -63,8 +55,16 @@ class XmlParser
         {
             throw new InvalidSourceStructureException("Root element must have attribute 'language' with value 'IPPcode24'");
         }
-        
-        // TODO - zkontrolovat výskyt dalších atributů
+
+        // Získání všech atributů kořenového elementu
+        $attributes = $rootElement->attributes;
+        foreach ($attributes as $attribute) {
+            // Kontrola, zda není jméno atributu "name" nebo "description"
+            if ($attribute->name !== "name" && $attribute->name !== "description" && $attribute->name !== "language") {
+                throw new InvalidSourceStructureException("Root element must not have any other attributes except 'name' and 'description'");
+            }
+        }
+        // TODO - zkontrolovat ze se neobjevuje zadny jiny atribut krome name a description
     }
 
     private function checkInstructions() : void
@@ -151,7 +151,7 @@ class XmlParser
                     if ($arg->nodeType == XML_ELEMENT_NODE) 
                     {
                         $label = (string)$arg->nodeName;
-                        $type = (string)$arg->getAttribute("type");
+                        $type = (string)trim($arg->getAttribute("type"));
 
                         if (in_array($label, $labels) || ($label !== "arg1" && $label !== "arg2" && $label !== "arg3") || $type === "")
                         {
@@ -159,6 +159,12 @@ class XmlParser
                         }
 
                         $value = trim((string)$arg->nodeValue);
+
+                        if (strpos($value, " ") !== false)
+                        {
+                            throw new InvalidSourceStructureException("Invalid value format contains spaces: '$value'");
+                        }
+
                         $args[$label] = new Argument($type, $value);
                         $labels[] = $label;
                     }

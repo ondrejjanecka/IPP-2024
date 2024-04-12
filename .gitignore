@@ -12,6 +12,8 @@ interpret/ipp-core/interpret.php
 interpret/ipp-core/tests/sup
 interpret/ipp-core/tmp
 interpret/ipp-core/tests/t
+interpret/ipp-core/tests/all
+interpret/ipp-core/tests/supp
 
 parser/supTest
 parser/tests
