@@ -10,20 +10,25 @@ Dokumentace popisuje způsob řešení druhé úlohy z projektu IPP 2024. Cílem
 
 ## Návrh
 
-Navrhovaná implementace projektu je založena na principu objektově orientovaného programování (OOP) a využívá návrhový vzor řetězec odpovědnosti (**Chain of Responsibility**). Tento návrhový vzor se týká vykonávání různých typů instrukcí v aplikaci. Řetězec odpovědnosti umožňuje, aby se každá instrukce zpracovávala nezávisle na ostatních, což poskytuje flexibilitu a snadnou rozšiřitelnost systému. Každý objekt v řetězci odpovědnosti má možnost zpracovat požadavek nebo předat odpovědnost dalšímu objektu v řetězci, až je požadavek úspěšně zpracován nebo dosáhne konce řetězce. Retězec je vytvořený na základě odhadované četnosti jednotlivých instrukcí v programu s cílem o co nejefektivnější zpracovaní.
+Navrhovaná implementace projektu je založena na principu objektově orientovaného programování (OOP) a využívá návrhový vzor řetězec odpovědnosti (**Chain of Responsibility**). Tento návrhový vzor se týká všech tříd implementujích rozhraní ```Executor``` v adresáři ```Executors```. Řetězec odpovědnosti umožňuje, aby se každá instrukce zpracovávala nezávisle na ostatních, což poskytuje flexibilitu a snadnou rozšiřitelnost systému. Každý objekt v řetězci odpovědnosti má možnost zpracovat požadavek nebo předat odpovědnost dalšímu objektu v řetězci, až je požadavek úspěšně zpracován nebo dosáhne konce řetězce. Retězec je vytvořený na základě odhadované četnosti jednotlivých instrukcí v programu s cílem o co nejefektivnější zpracovaní.
+
+### UML diagram
+
+![UML diagram](img/uml.svg)
+
+### Sporné části
+
+Implementace vyžaduje sdílení několika proměnných a instancí napříč celým programem, týká se to například instance třídy ```Interpreter``` nebo ```instructionPointer```. Z tohoto důvodu se po zpracování XML při vytváření instance trídy ```InstructionExecutor``` vytvoří i instance třídy ```Memory```, která uchovává všechny potřebné instance a proměnné. Následně je předávána jako argument v řetězci odpovědnosti. Zde by bylo možné implemntovat třídu ```Memory``` podle návrhového vzoru jedináček, ale z důvodu vetší přehlednosti kódu jsem se rozhodl právě pro předávání intance formou argumentu.
 
 ## Struktura kódu
 
+Zdrojové kódy jsou rozděleny do čtyř adresářů.
 
-
-## Zpracování instrukcí
-
-
+- ```Exceptions``` - Rozšiřující třídy ```IPPException``` pro návrat chybových stávů programu.
+- ```Executors``` - Třídy určené pro vykonání jednotlivých instrukcí, které jsou v nich seskupeny podle typů.
+- ```Helpers``` - Pomocné statické funkce například pro převod escape sekvencí nebo získání názvů rámců a promenných z argumentů instrukcí ...
+- ```Library``` - Knihovna tříd definujících jednotlivé objekty programu.
 
 ## Testování a ladění
 
-
-
-## Závěr
-
-
+Testování bylo provedeno pomocí dodaných ukázkových automatických testů rozšířených o vlastní sadu testů vytvořených pomocí překladače z IFJ a parseru z první ůlohy. Kód byl testován statickou analýzou pomocí nástroje PHPStan a splňuje požadavky pro úroveň 7.

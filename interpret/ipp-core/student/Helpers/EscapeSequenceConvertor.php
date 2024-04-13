@@ -25,6 +25,8 @@ class EscapeSequenceConvertor
             $char = mb_chr((int) $matches[1], 'UTF-8');
             return $char;
         }, $string);    
+        if ($string === null)
+            $string = "";
         return $string;
     }
 }

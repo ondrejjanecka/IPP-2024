@@ -43,6 +43,7 @@ class FrameStack extends Stack
      * Overrides the parent method to ensure that only Frame objects can be popped from the stack.
      * 
      * @return Frame The item at the top of the stack.
+     * @throws FrameAccessException
      */
     public function pop()
     {

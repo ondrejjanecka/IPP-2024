@@ -56,15 +56,15 @@ class XmlParser
             throw new InvalidSourceStructureException("Root element must have attribute 'language' with value 'IPPcode24'");
         }
 
-        // Získání všech atributů kořenového elementu
+        // Check if root element has only allowed attributes
         $attributes = $rootElement->attributes;
-        foreach ($attributes as $attribute) {
-            // Kontrola, zda není jméno atributu "name" nebo "description"
-            if ($attribute->name !== "name" && $attribute->name !== "description" && $attribute->name !== "language") {
+        foreach ($attributes as $attribute) 
+        {
+            if ($attribute->name !== "name" && $attribute->name !== "description" && $attribute->name !== "language") 
+            {
                 throw new InvalidSourceStructureException("Root element must not have any other attributes except 'name' and 'description'");
             }
         }
-        // TODO - zkontrolovat ze se neobjevuje zadny jiny atribut krome name a description
     }
 
     private function checkInstructions() : void

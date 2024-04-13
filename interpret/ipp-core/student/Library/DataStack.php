@@ -28,21 +28,22 @@
         $this->stack = [];
     }
 
-     /**
-      * Pushes an item onto the top of the stack.
-      *
-      * @param Constant $item The item to push onto the stack.
-      */
+    /**
+     * Pushes an item onto the top of the stack.
+    *
+    * @param Constant $item The item to push onto the stack.
+    */
      public function push($item) : void
      {
          array_push($this->stack, $item);
      }
  
-     /**
-      * Removes and returns the item at the top of the stack.
-      *
-      * @return Constant The item at the top of the stack.
-      */
+    /**
+     * Removes and returns the item at the top of the stack.
+    *
+    * @return Constant The item at the top of the stack.
+    * @throws ValueException
+    */
      public function pop()
      {
         if ($this->isEmpty($this->stack)) 
