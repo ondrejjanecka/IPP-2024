@@ -89,23 +89,31 @@ class IOExecutor implements Executor
             if ($variable->getType() === "nil") 
             {
                 $this->memory->stdout->writeString("");
-                return;
             }
             else if ($variable->getType() === "bool")
             {
-                $this->memory->stdout->writeString($variable->getValue() ? "true" : "false");
-                return;
+                $this->memory->stdout->writeBool($variable->getValue());
+            }
+            else if ($variable->getType() === "int")
+            {
+                $this->memory->stdout->writeInt($variable->getValue());
             }
             else 
+            {
                 $this->memory->stdout->writeString(StringConvertor::convert($variable->getValue()));
+            }
         }
-        else if ($type === "int" || $type === "string") 
+        else if ($type === "string") 
         {
             $this->memory->stdout->writeString(StringConvertor::convert($symb->getValue()));
         }
+        else if ($type === "int") 
+        {
+            $this->memory->stdout->writeInt($symb->getValue());
+        }
         else if ($type === "bool") 
         {
-            $this->memory->stdout->writeString($symb->getValue() ? "true" : "false");
+            $this->memory->stdout->writeBool($symb->getValue());
         }
         else if ($type === "nil") 
         {
