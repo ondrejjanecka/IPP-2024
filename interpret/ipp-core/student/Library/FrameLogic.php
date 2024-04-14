@@ -77,6 +77,7 @@ class FrameLogic
     public function popFrame(): void
     {
         $this->temporaryFrame = $this->frameStack->pop();
+        $this->localFrame = $this->frameStack->peek();
     }
 
     /**

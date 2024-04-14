@@ -13,6 +13,7 @@ interpret/ipp-core/tests/sup
 interpret/ipp-core/tmp
 interpret/ipp-core/tests/t
 interpret/ipp-core/tests/all
+interpret/ipp-core/tests/big
 interpret/ipp-core/tests/supp
 interpret/ipp-core/tests/Programs
 interpret/ipp-core/tests/Compiler

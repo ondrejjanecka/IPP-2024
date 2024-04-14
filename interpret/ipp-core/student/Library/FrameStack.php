@@ -52,4 +52,20 @@ class FrameStack extends Stack
 
         return array_pop($this->stack);
     }
+
+    /**
+     * Returns the item at the top of the stack without removing it.
+     * 
+     * @return Frame|null The item at the top of the stack or null if empty.
+     */
+    public function peek()
+    {
+        if ($this->isEmpty($this->stack)) 
+            return null;
+
+        $item = $this->pop();
+        $this->push($item); 
+
+        return $item;
+    }
 }
