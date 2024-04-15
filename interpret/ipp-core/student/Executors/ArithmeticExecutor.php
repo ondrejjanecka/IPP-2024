@@ -93,7 +93,7 @@ class ArithmeticExecutor implements Executor
             {
                 throw new OperandValueException();
             }
-            $variable->setValue($symb1->getValue() / $symb2->getValue());
+            $variable->setValue(intdiv($symb1->getValue(), $symb2->getValue()));
         }
         $variable->setType("int");
     }

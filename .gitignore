@@ -25,6 +25,7 @@ unp
 *.zip
 *.exe
 is_it_ok.sh
+*.db
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
