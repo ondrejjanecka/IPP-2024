@@ -21,7 +21,7 @@ Projekty do predmětu **Principy programovacích jazyků** a OOP na FIT VUT v Br
 | Rozšíření STATP                              | **86%**   |
 | Celkem bez rozšíření                         | **94%**   |
 
-**Celkem 8,1 bodů**
+**Celkem 8,11 bodů**
 
 ### 2. Projekt - interpret.php
 
